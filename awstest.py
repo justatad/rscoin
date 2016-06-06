@@ -15,8 +15,8 @@ if False:
 
 if False:
 	print ec2.create_instances(
-		ImageId='ami-178be960', 
+		ImageId='ami-b0ac25c3',
 		InstanceType='t2.micro',
-		SecurityGroupIds= [ 'sg-ae5f0fcb' ],
-		MinCount=1, 
+		SecurityGroupIds= [ 'sg-7aeb2e0d' ],
+		MinCount=1,
 		MaxCount=1 )
