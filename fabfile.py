@@ -48,17 +48,17 @@ env.roledefs.update({
 from collections import defaultdict
 env.timings = defaultdict(list)
 
-NUM_MACHINES = 60
+NUM_MACHINES = 4
 
 @runs_once
 def ec2start():
     if len(all_machines) < NUM_MACHINES:
         missing = NUM_MACHINES - len(all_machines)
         ec2.create_instances(
-            ImageId='ami-178be960', 
+            ImageId='ami-5f29bb2c',
             InstanceType='t2.micro',
-            SecurityGroupIds= [ 'sg-ae5f0fcb' ],
-            MinCount=missing, 
+            SecurityGroupIds= [ 'sg-8b229aec' ],
+            MinCount=missing,
             MaxCount=missing )
 
 @runs_once
@@ -83,7 +83,7 @@ def time():
     with cd('/home/ubuntu/projects/rscoin'):
         x = run('py.test-2.7 -s -k "full_client"') + "\n\n"
         x += run('py.test-2.7 -s -k "timing"')
-        
+
         for k, v in re.findall("(.*:) (.*) / sec", x):
             env.timings[k] += [ float(v) ]
 
@@ -92,8 +92,8 @@ def time():
 
         f = file("remote_timings.txt", "w")
         for k, v in env.timings.iteritems():
-            f.write("%s %2.4f %2.4f\n" % (k, np.mean(v), np.std(v)))   
-        # f.close()         
+            f.write("%s %2.4f %2.4f\n" % (k, np.mean(v), np.std(v)))
+        # f.close()
 
 @roles("servers")
 @parallel
@@ -106,7 +106,7 @@ def cpu():
 @runs_once
 def local_cpu():
     local("sysbench --test=cpu --cpu-max-prime=2000 run")
-    
+
 
 def null():
     pass
@@ -146,7 +146,7 @@ def clean():
 def stop():
     with cd('/home/ubuntu/projects/rscoin'):
         with settings(warn_only=True):
-            
+
             try:
                 out = run('ps -u ubuntu')
                 if "twistd" in out:
@@ -156,7 +156,7 @@ def stop():
             except:
                 pass
             # print out
-            
+
 
 @roles("servers")
 def keys():
@@ -173,10 +173,10 @@ def keys():
         run('rm secret.key')
         result = run('python derivekey.py --store')
         [_, key] = result.strip().split()
-        
+
         kid = b64encode(rscoin.Key(b64decode(key)).id())
         env["rsdir"]["directory"] += [ [kid, host, 8080] ]
-    
+
 
     from json import dumps
     file("directory.conf", "w").write(dumps(env["rsdir"]))
@@ -269,7 +269,7 @@ def experiment1actual():
 
 
 @roles("clients")
-def experiment1collect():        
+def experiment1collect():
         # run("ls experiment1/*")
     with cd('/home/ubuntu/projects/rscoin/%s' % env.expname):
         get('issue-times.txt', '%s/%s-issue-times.txt' % (env.expname, env.host))
@@ -279,7 +279,7 @@ def experiment1collect():
 
     with cd('/home/ubuntu/projects/rscoin/%s' % env.expname):
         get('r1-times.txt', '%s/%s-r1-times.txt' % (env.expname, env.host))
-    
+
     with lcd(env.expname):
         local("cat %s-r1-times.txt >> r1-times.txt" % env.host)
 
@@ -329,9 +329,9 @@ def experiment3():
         with settings(warn_only=True):
             execute(stop)
 
-        with settings(warn_only=True):            
+        with settings(warn_only=True):
             execute(clean)
-        
+
         if "rsdir" in env:
             del env["rsdir"]
         execute(keys)
