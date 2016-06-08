@@ -58,6 +58,7 @@ def ec2start():
             ImageId='ami-5f29bb2c',
             InstanceType='t2.micro',
             SecurityGroupIds= [ 'sg-8b229aec' ],
+            SubnetId= 'subnet-06b06f70',
             MinCount=missing,
             MaxCount=missing )
 
