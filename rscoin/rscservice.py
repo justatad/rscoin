@@ -224,7 +224,7 @@ class RSCFactory(protocol.Factory):
 
     _sync = False
 
-    def __init__(self, secret, directory, special_key, conf_dir=None, N=3, cTxFile):
+    def __init__(self, secret, directory, special_key, conf_dir=None, N=3, cTxFile=None):
         """ Initialize the RSCoin server"""
         self.special_key = special_key
         self.key = rscoin.Key(secret, public=False)
