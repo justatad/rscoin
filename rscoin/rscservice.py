@@ -35,13 +35,13 @@ def package_query(tx, tx_deps, keys):
         items += [ txi.serialize() ]
 
     for k in keys:
-        items += [ k.export()[0] ]        
+        items += [ k.export()[0] ]
 
     for k in keys:
         items += [ k.sign(tx.id()) ]
 
-    dataCore = map(b64encode, items)    
-    
+    dataCore = map(b64encode, items)
+
     H = sha256(" ".join(dataCore)).digest()
     data = " ".join(["xQuery", str(len(dataCore))] + dataCore)
 
@@ -50,7 +50,7 @@ def package_query(tx, tx_deps, keys):
 
 def unpackage_query_response(response):
     resp = response.strip().split(" ")
-    
+
     code = resp[0]
     if code == "OK" or code == "Pong":
         resp[1:] = map(b64decode, resp[1:])
@@ -77,7 +77,7 @@ def package_issue(tx, ks):
 
 def unpackage_commit_response(response):
     resp = response.strip().split(" ")
-    
+
     code = resp[0]
     if code == "OK" or code == "Pong":
         resp[1:] = map(b64decode, resp[1:])
@@ -114,7 +114,7 @@ class RSCProtocol(LineReceiver):
                     sigs += [items.pop(0)]
 
         assert len(items) == 0
-        
+
         return H, (mainTx, otherTx, keys, sigs)
 
 
@@ -136,15 +136,15 @@ class RSCProtocol(LineReceiver):
         except Exception as e:
             print_exc()
             self.return_Err("ParsingError")
-            return 
+            return
 
-        try:            
+        try:
             # Check the Tx Query
             res = self.factory.process_TxQuery(data)
         except Exception as e:
             print_exc()
             self.return_Err("QueryError")
-            return 
+            return
 
         # If Query failed
         if not res:
@@ -156,11 +156,11 @@ class RSCProtocol(LineReceiver):
 
     def handle_Commit(self, items):
         """ Process the commit message and respond """
-        
+
         try:
             bundle_size = int(items[1])
 
-            extras = items[2+bundle_size:] 
+            extras = items[2+bundle_size:]
             items = items[2:2+bundle_size]
             H, data = RSCProtocol.parse_Tx_bundle( bundle_size, items)
             (mainTx, otherTx, keys, sigs) = data
@@ -173,7 +173,7 @@ class RSCProtocol(LineReceiver):
                 auth_keys += [ b64decode(extras.pop(0)) ]
                 auth_sigs += [ b64decode(extras.pop(0)) ]
 
-            assert len(extras) == 0            
+            assert len(extras) == 0
         except:
             print_exc()
             self.return_Err("ParsingError")
@@ -196,7 +196,7 @@ class RSCProtocol(LineReceiver):
 
         items = line.split(" ")
         if items[0] == "xQuery":
-            return self.handle_Query(items) # Get signatures           
+            return self.handle_Query(items) # Get signatures
 
         if items[0] == "xCommit":
             return self.handle_Commit(items) # Seal a transaction
@@ -224,18 +224,19 @@ class RSCFactory(protocol.Factory):
 
     _sync = False
 
-    def __init__(self, secret, directory, special_key, conf_dir=None, N=3):
+    def __init__(self, secret, directory, special_key, conf_dir=None, N=3, cTxFile):
         """ Initialize the RSCoin server"""
         self.special_key = special_key
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
         keyID = self.key.id()[:10]
         self.N = N
+        self.cTxFile = cTxFile
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
         self.logname = 'log-%s' % hexlify(keyID)
-        
+
         if conf_dir:
             self.dbname = join(conf_dir, self.dbname)
             self.logname = join(conf_dir, self.logname)
@@ -244,17 +245,17 @@ class RSCFactory(protocol.Factory):
             self.db = dbm.open(self.dbname, 'c')
             self.log = dbm.open(self.logname, 'c')
         else:
-            self.db = {} 
+            self.db = {}
             self.log = {}
 
-    
+
     def buildProtocol(self, addr):
         cli = RSCProtocol(self)
         return cli
 
 
     def process_TxQuery(self, data):
-        """ Queries a full transaction and gets a signed response if it is valid. 
+        """ Queries a full transaction and gets a signed response if it is valid.
 
             When I get a query:
             * Check that the signatures check.
@@ -306,8 +307,8 @@ class RSCFactory(protocol.Factory):
 
         # Save before signing
         if RSCFactory._sync:
-            self.db.sync() 
-            self.log.sync()       
+            self.db.sync()
+            self.log.sync()
         return True
 
     def process_TxCommit(self, data):
@@ -322,7 +323,7 @@ class RSCFactory(protocol.Factory):
         if not should_handle:
             log.msg('Failed Tx ID range ownership')
             return False
-        
+
         # First check all signatures
         all_good = True
         pub_set = []
@@ -349,7 +350,7 @@ class RSCFactory(protocol.Factory):
         for itx in inTxo:
             ## Ensure we have a Quorum for each input
             aut = set(self.get_authorities(itx))
-            all_good &= (len(aut & pub_set) > len(aut) / 2) 
+            all_good &= (len(aut & pub_set) > len(aut) / 2)
 
         if not all_good:
             log.msg('Failed Tx Authority Consensus')
@@ -364,10 +365,15 @@ class RSCFactory(protocol.Factory):
 
         ## TODO: Log all information about the transaction
 
+        # Now write the transaction to disk
+        f = self.cTxFile.open('a')
+        f.write(data)
+        f = self.cTxFile.close()
+
         # Update the outTx entries
         for k, v in mainTx.get_utxo_out_entries():
             self.db[k] = v
-        
+
         if RSCFactory._sync:
             self.db.sync()
 
@@ -382,7 +388,7 @@ class RSCFactory(protocol.Factory):
 def get_authorities(directory, xID, N = 3):
     """ Returns the keys of the authorities for a certain xID """
     d = sorted(directory)
-    
+
     if __debug__:
         for di, _, _ in d:
             assert isinstance(di, str) and len(di) == 32
