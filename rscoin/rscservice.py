@@ -366,7 +366,7 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
-        f = self.cTxFile.open('a')
+        f = open(self.cTxFile, 'a')
         f.write(data)
         f = self.cTxFile.close()
 
