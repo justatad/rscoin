@@ -367,7 +367,7 @@ class RSCFactory(protocol.Factory):
 
         # Now write the transaction to disk
         f = open(self.cTxFile, 'a')
-        f.write(data)
+        print >>f, data
         f = self.cTxFile.close()
 
         # Update the outTx entries
