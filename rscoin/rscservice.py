@@ -231,6 +231,7 @@ class RSCFactory(protocol.Factory):
         self.directory = sorted(directory)
         keyID = self.key.id()[:10]
         self.N = N
+        self.cTxFile = 'commits-%s' % hexlify(keyID)
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
@@ -365,7 +366,6 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
-        self.cTxFile = 'commits-%s' % hexlify(keyID)
         f = self.cTxFile.open('a')
         f.write(data)
         f = self.cTxFile.close()
