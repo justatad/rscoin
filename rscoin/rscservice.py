@@ -224,14 +224,13 @@ class RSCFactory(protocol.Factory):
 
     _sync = False
 
-    def __init__(self, secret, directory, special_key, conf_dir=None, N=3, cTxFile=None):
+    def __init__(self, secret, directory, special_key, conf_dir=None, N=3):
         """ Initialize the RSCoin server"""
         self.special_key = special_key
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
         keyID = self.key.id()[:10]
         self.N = N
-        self.cTxFile = cTxFile
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
@@ -366,6 +365,7 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
+        self.cTxFile = 'commits-%s' % hexlify(keyID)
         f = self.cTxFile.open('a')
         f.write(data)
         f = self.cTxFile.close()
