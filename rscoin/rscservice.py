@@ -367,7 +367,7 @@ class RSCFactory(protocol.Factory):
 
         # Now write the transaction to disk
         f = open(self.cTxFile, 'a')
-        _, _, core = package_query(tx, otherTx, keys)
+        _, _, core = package_query(Maintx, otherTx, keys)
         print >>f, join(core)
         f.close()
 
