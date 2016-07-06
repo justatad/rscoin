@@ -18,10 +18,10 @@ if __name__ == "__main__":
     m_r1, v_r1 = [], []
     m_r2, v_r2 = [], []
 
-    for i in range(1, 11):
+    for i in (10, 15, 25, 30):
         X += [i]
 
-        directory = "experiment3x%03d" % i
+        directory = "experiment3x0%d" % i
         cnt_issue, m, v = process_recs(directory, "issue-times.txt" )
         m_issue += [m]
         v_issue += [v]
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     #v = v_issue / (len(cnt_issue)**0.5)
     #plt.fill_between(x=X, y1=m_issue - v, y2=m_issue+v, alpha=0.2, color="b")
 
-    plt.plot(X, m_r1, label="Pay (run 1)", color="b") #, linestyle="dashed")    
+    plt.plot(X, m_r1, label="Pay (run 1)", color="b") #, linestyle="dashed")
     v = v_r1 / (len(cnt_r1)**0.5)
     plt.fill_between(x=X, y1=m_r1 - v, y2=m_r1+v, alpha=0.2, color="b")
 

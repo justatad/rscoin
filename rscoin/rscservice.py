@@ -366,9 +366,9 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
-        f = open(self.cTxFile, 'a')
-        print >>f, join(data)
-        f.close()
+        #f = open(self.cTxFile, 'a')
+        #print >>f, join(data)
+        #f.close()
 
         # Update the outTx entries
         for k, v in mainTx.get_utxo_out_entries():
