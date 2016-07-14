@@ -1,4 +1,4 @@
-from twisted.application import internet, service
+from twisted.application import internet, service, TimerService
 from rscoin.rscservice import RSCFactory, load_setup
 
 import rscoin
