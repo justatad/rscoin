@@ -5,6 +5,12 @@ from rscoin.rscservice import RSCFactory, load_setup
 import rscoin
 from base64 import b64encode, b64decode
 
+def CloseEpoch():
+
+    point = TCP4ClientEndpoint(reactor, "127.0.0.1", 8080, timeout=10)
+    f = RSCfactory()
+    d = point.connect(f)
+    d.sendLine("xCloseEpoch")
 
 secret = file("secret.key").read()
 public = rscoin.Key(secret, public=False)
@@ -16,5 +22,5 @@ directory = load_setup(dir_data) # [(public.id(), "127.0.0.1", 8080)]
 application = service.Application("rscoin")
 echoService = internet.TCPServer(8080, RSCFactory(secret, directory["directory"], directory["special"], N=3))
 echoService.setServiceParent(application)
-ts = TimerService(60, handle_CloseEpoch)
+ts = TimerService(60, CloseEpoch)
 ts.setServiceParent(application)

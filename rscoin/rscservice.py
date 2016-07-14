@@ -228,8 +228,8 @@ class RSCProtocol(LineReceiver):
             self.sendLine("Pong %s" % b64encode(self.factory.key.id()))
             return # self.handle_Commit(items) # Seal a transaction
 
-        #if items[0] == 'xCloseEpoch':
-        #    return self.handle_CloseEpoch() # Close an epoch on the mintette
+        if items[0] == 'xCloseEpoch':
+            return self.handle_CloseEpoch() # Close an epoch on the mintette
 
         self.return_Err("UnknownCommand:%s" % items[0])
         return
