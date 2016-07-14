@@ -1,7 +1,7 @@
 from twisted.application import internet, service
 from twisted.application.internet import TimerService
 from rscoin.rscservice import RSCFactory, load_setup
-from twisted.internet.endpoints import TCP4ClientEndpoint
+from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
 from twisted.internet import reactor
 from twisted.internet.protocol import Protocol
 
