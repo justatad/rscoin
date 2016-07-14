@@ -1,6 +1,7 @@
 from twisted.application import internet, service
 from twisted.application.internet import TimerService
 from rscoin.rscservice import RSCFactory, load_setup
+from twisted.internet.endpoints import TCP4ClientEndpoint
 
 import rscoin
 from base64 import b64encode, b64decode
