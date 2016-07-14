@@ -191,6 +191,29 @@ class RSCProtocol(LineReceiver):
         self.sendLine("OK %s" % ret)
 
 
+    def handle_CloseEpoch():
+
+        mset = []
+
+        try:
+            f = open(self.cTxFile, 'r')
+            for line in f:
+                (mainTx, otherTx, keys, sigs) = line
+                mset += otherTx
+                otherblocks = otherblocks + otherTx
+                txset = txset + mainTx
+            H = sha256(otherblocks + txset).digest()
+            lb = LowerBlock(H, txset, self.sign(H), mset)
+            f = open(self.lBlockFile, 'a')
+            print >>f, join(lb)
+            f.close()
+
+        except:
+            print_exc()
+            self.return_Err("CloseEpochError")
+            return
+
+
     def lineReceived(self, line):
         """ Simple de-multiplexer """
 
@@ -204,6 +227,9 @@ class RSCProtocol(LineReceiver):
         if items[0] == "Ping":
             self.sendLine("Pong %s" % b64encode(self.factory.key.id()))
             return # self.handle_Commit(items) # Seal a transaction
+
+        #if items[0] == 'xCloseEpoch':
+        #    return self.handle_CloseEpoch() # Close an epoch on the mintette
 
         self.return_Err("UnknownCommand:%s" % items[0])
         return
@@ -232,6 +258,7 @@ class RSCFactory(protocol.Factory):
         keyID = self.key.id()[:10]
         self.N = N
         self.cTxFile = 'commits-%s' % hexlify(keyID)
+        self.lBlockFile = 'lowerblocks-%s' % hexlify(keyID)
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
@@ -366,9 +393,9 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
-        #f = open(self.cTxFile, 'a')
-        #print >>f, join(data)
-        #f.close()
+        f = open(self.cTxFile, 'a')
+        print >>f, join(data)
+        f.close()
 
         # Update the outTx entries
         for k, v in mainTx.get_utxo_out_entries():

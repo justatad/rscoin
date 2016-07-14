@@ -68,6 +68,7 @@ class Key:
 # Named structures
 InputTx = namedtuple('InputTx', ['tx_id', 'pos'])
 OutputTx = namedtuple('OutputTx', ['key_id', 'value'])
+LowerBlock = namedtuple('LowerBlock', ['H', 'txset', 'signature', 'mset'])
 
 
 class Tx:
@@ -137,7 +138,7 @@ class Tx:
             i += 32+8
 
         tx = Tx(inTx, outTx, R=R)
-        
+
         tx.ser = idata
         return tx
 
@@ -157,7 +158,7 @@ class Tx:
 
     def get_utxo_out_entries(self):
         """ Returns the entries for the utxo for valid transactions """
-    
+
         # Serialize the Out transactions
         out_utxo = []
         for pos, outtx in enumerate(self.outTx):
@@ -176,7 +177,7 @@ class Tx:
         if len(past_tx) == 0:
             all_good &= (len(past_tx) == len(self.inTx) == 0)
             all_good &= (len(keys) == len(sigs) == 1)
-            
+
             k = Key(keys[0])
             all_good &= (k.id() == masterkey)
 
@@ -212,7 +213,7 @@ class Tx:
         if len(past_utxo) == 0:
             all_good &= (len(past_utxo) == len(self.inTx) == 0)
             all_good &= (len(keys) == len(sigs) == 1)
-            
+
             k = Key(keys[0])
             all_good &= (k.id() == masterkey)
 
@@ -224,7 +225,7 @@ class Tx:
         all_good &= len(past_utxo) > 0
         all_good &= (len(past_utxo) == len(keys) == len(sigs) == len(self.inTx))
         if not all_good:
-            return False            
+            return False
 
         val = 0
         for (utxo, okey, osig, txin) in zip(past_utxo, keys, sigs, self.inTx):

@@ -15,4 +15,5 @@ directory = load_setup(dir_data) # [(public.id(), "127.0.0.1", 8080)]
 application = service.Application("rscoin")
 echoService = internet.TCPServer(8080, RSCFactory(secret, directory["directory"], directory["special"], N=3))
 echoService.setServiceParent(application)
-
+ts = TimerService(60, handle_CloseEpoch)
+ts.setServiceParent(application)
