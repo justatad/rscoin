@@ -386,7 +386,7 @@ class RSCFactory(protocol.Factory):
         # Now write the transaction to disk
         commitfile = 'commits-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
         f = open(commitfile, 'a')
-        print >>f, join(data)
+        print >>f, " ".join(data)
         f.close()
 
         # Update the outTx entries
