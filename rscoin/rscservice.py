@@ -89,7 +89,6 @@ class RSCProtocol(LineReceiver):
 
     def __init__(self, factory):
         self.factory = factory
-        self.lBlockFile = 'lowerblocks'
 
     @staticmethod
     def parse_Tx_bundle(bundle_items, items):
@@ -194,25 +193,17 @@ class RSCProtocol(LineReceiver):
 
     def handle_CloseEpoch(self):
 
-        mset = []
-
         try:
-            f = open(self.cTxFile, 'r')
-            for line in f:
-                (mainTx, otherTx, keys, sigs) = line
-                mset += otherTx
-                otherblocks = otherblocks + otherTx
-                txset = txset + mainTx
-            H = sha256(otherblocks + txset).digest()
-            lb = LowerBlock(H, txset, self.sign(H), mset)
-            f = open(self.lBlockFile, 'a')
-            print >>f, join(lb)
-            f.close()
-
-        except:
+            res = self.factory.process_CloseEpoch()
+        except Exception as e:
             print_exc()
             self.return_Err("CloseEpochError")
+
+        if not res:
+            self.sendLine("NOTOK")
             return
+
+        self.sendLine("OK")
 
 
     def lineReceived(self, line):
@@ -258,7 +249,7 @@ class RSCFactory(protocol.Factory):
         self.directory = sorted(directory)
         keyID = self.key.id()[:10]
         self.N = N
-        self.cTxFile = 'commits-%s' % hexlify(keyID)
+        self.epochNumber = 1
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
@@ -393,7 +384,8 @@ class RSCFactory(protocol.Factory):
         ## TODO: Log all information about the transaction
 
         # Now write the transaction to disk
-        f = open(self.cTxFile, 'a')
+        commitfile = 'commits-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
+        f = open(commitfile, 'a')
         print >>f, join(data)
         f.close()
 
@@ -405,6 +397,28 @@ class RSCFactory(protocol.Factory):
             self.db.sync()
 
         return all_good
+
+
+    def process_CloseEpoch(self):
+
+        mset = []
+        commitfile = 'commits-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
+
+        f = open(commitfile, 'r')
+        for line in f:
+            (H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig) = line
+            mset += otherTx
+            otherblocks = otherblocks + otherTx
+            txset = txset + mainTx
+
+        H = sha256(otherblocks + txset).digest()
+        LowerBlock(H, txset, self.sign(H), mset)
+        lbfile = 'lowerblocks-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
+        f = open(lbfile, 'a')
+        print >>f, join(lb)
+        f.close()
+        self.epochNumber = self.epochNumber + 1
+        return true
 
 
     def get_authorities(self, xID):
