@@ -192,7 +192,7 @@ class RSCProtocol(LineReceiver):
         self.sendLine("OK %s" % ret)
 
 
-    def handle_CloseEpoch():
+    def handle_CloseEpoch(self):
 
         mset = []
 
