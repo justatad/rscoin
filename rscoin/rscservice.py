@@ -252,8 +252,8 @@ class RSCFactory(protocol.Factory):
         self.epochNumber = 1
 
         # Open the databases
-        self.dbname = 'keys-%s' % hexlify(keyID)
-        self.logname = 'log-%s' % hexlify(keyID)
+        self.dbname = 'keys-%s' % hexlify(self.keyID)
+        self.logname = 'log-%s' % hexlify(self.keyID)
 
         if conf_dir:
             self.dbname = join(conf_dir, self.dbname)
