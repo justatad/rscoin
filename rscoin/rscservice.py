@@ -247,7 +247,7 @@ class RSCFactory(protocol.Factory):
         self.special_key = special_key
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
-        keyID = self.key.id()[:10]
+        self.keyID = self.key.id()[:10]
         self.N = N
         self.epochNumber = 1
 
