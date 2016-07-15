@@ -89,6 +89,7 @@ class RSCProtocol(LineReceiver):
 
     def __init__(self, factory):
         self.factory = factory
+        self.lBlockFile = 'lowerblocks'
 
     @staticmethod
     def parse_Tx_bundle(bundle_items, items):
@@ -258,7 +259,6 @@ class RSCFactory(protocol.Factory):
         keyID = self.key.id()[:10]
         self.N = N
         self.cTxFile = 'commits-%s' % hexlify(keyID)
-        self.lBlockFile = 'lowerblocks-%s' % hexlify(keyID)
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(keyID)
