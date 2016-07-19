@@ -18,6 +18,8 @@ from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
 
+from hippiehug import Tree
+
 import rscoin
 
 def load_setup(setup_data):
@@ -191,21 +193,6 @@ class RSCProtocol(LineReceiver):
         self.sendLine("OK %s" % ret)
 
 
-    def handle_CloseEpoch(self):
-
-        try:
-            res = self.factory.process_CloseEpoch()
-        except Exception as e:
-            print_exc()
-            self.return_Err("CloseEpochError")
-
-        if not res:
-            self.sendLine("NOTOK")
-            return
-
-        self.sendLine("OK")
-
-
     def lineReceived(self, line):
         """ Simple de-multiplexer """
 
@@ -219,9 +206,6 @@ class RSCProtocol(LineReceiver):
         if items[0] == "Ping":
             self.sendLine("Pong %s" % b64encode(self.factory.key.id()))
             return # self.handle_Commit(items) # Seal a transaction
-
-        if items[0] == 'xCloseEpoch':
-            return self.handle_CloseEpoch() # Close an epoch on the mintette
 
         self.return_Err("UnknownCommand:%s" % items[0])
         return
@@ -249,7 +233,13 @@ class RSCFactory(protocol.Factory):
         self.directory = sorted(directory)
         self.keyID = self.key.id()[:10]
         self.N = N
-        self.epochNumber = 1
+        self.txCount = 1
+        self.txset_tree = Tree()
+        self.mset = []
+        self.otherBlocks = ''
+        self.txset = ''
+        self.lastLowerBlockHash = ''
+        self.lastLowerBlockHash = ''
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
@@ -381,14 +371,6 @@ class RSCFactory(protocol.Factory):
             log.msg('Failed Tx Doublespending')
             return False
 
-        ## TODO: Log all information about the transaction
-
-        # Now write the transaction to disk
-        commitfile = 'commits-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
-        f = open(commitfile, 'a')
-        print >>f, " ".join(data)
-        f.close()
-
         # Update the outTx entries
         for k, v in mainTx.get_utxo_out_entries():
             self.db[k] = v
@@ -396,29 +378,28 @@ class RSCFactory(protocol.Factory):
         if RSCFactory._sync:
             self.db.sync()
 
+        # Store information used to generate the lower level block for this mintette
+        self.txCount += 1
+        self.mset += otherTx
+        self.otherBlocks += otherTx
+        self.txset += mainTx
+        self.txset_tree.add(mainTx)
+
+        # Check to see if enough transactions have been received to close the epoch
+        if self.txCount >= 100:
+
+            # Need to add hash of prev higher block
+            H = sha256(self.lastHigherBlock + self.lastLowerBlock + self.otherBlocks + self.txset_tree.root()).digest
+            log.msg(H)
+            lb = LowerBlock(H, self.txset, self.sign(H), self.mset)
+            self.lastLowerBlockHash = sha256(lb).digest
+            self.txCount = 0
+            self.txset_tree = Tree()
+            self.mset = []
+            self.otherBlocks = ''
+            self.txset = ''
+
         return all_good
-
-
-    def process_CloseEpoch(self):
-
-        mset = []
-        commitfile = 'commits-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
-
-        f = open(commitfile, 'r')
-        for line in f:
-            (H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig) = line
-            mset += otherTx
-            otherblocks = otherblocks + otherTx
-            txset = txset + mainTx
-
-        H = sha256(otherblocks + txset).digest()
-        LowerBlock(H, txset, self.sign(H), mset)
-        lbfile = 'lowerblocks-epoch-%s-%s' % (self.epochNumber, hexlify(self.keyID))
-        f = open(lbfile, 'a')
-        print >>f, join(lb)
-        f.close()
-        self.epochNumber = self.epochNumber + 1
-        return true
 
 
     def get_authorities(self, xID):
