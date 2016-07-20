@@ -381,8 +381,8 @@ class RSCFactory(protocol.Factory):
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
         self.mset += otherTx
-        self.otherBlocks += otherTx
-        self.txset += mainTx
+        self.otherBlocks += "".join([str(i) for i in otherTx])
+        self.txset += "".join([str(i) for i in mainTx])
         self.txset_tree.add(mainTx)
 
         # Check to see if enough transactions have been received to close the epoch
