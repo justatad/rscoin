@@ -239,7 +239,7 @@ class RSCFactory(protocol.Factory):
         self.otherBlocks = ''
         self.txset = ''
         self.lastLowerBlockHash = ''
-        self.lastLowerBlockHash = ''
+        self.lastHigherBlockHash = ''
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
@@ -382,15 +382,15 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         self.mset += otherTx
         self.otherBlocks += "".join([str(i) for i in otherTx])
-        self.txset += str(mainTx)
-        self.txset_tree.add(str(mainTx))
-        log.msg(str(mainTx))
+        self.txset += mainTx.serialize
+        self.txset_tree.add(mainTx.serialize())
+        log.msg(mainTx.serialize())
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 100:
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlock + self.lastLowerBlock + self.otherBlocks + self.txset_tree.root()).digest
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest
             log.msg(H)
             lb = LowerBlock(H, self.txset, self.sign(H), self.mset)
             self.lastLowerBlockHash = sha256(lb).digest
