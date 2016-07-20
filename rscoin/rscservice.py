@@ -392,7 +392,7 @@ class RSCFactory(protocol.Factory):
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest
             log.msg(H)
-            lb = LowerBlock(H, self.txset, self.sign(H), self.mset)
+            lb = [H, self.txset, self.sign(H), self.mset]
             self.lastLowerBlockHash = sha256(lb).digest
             self.txCount = 0
             self.txset_tree = Tree()

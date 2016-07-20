@@ -68,7 +68,6 @@ class Key:
 # Named structures
 InputTx = namedtuple('InputTx', ['tx_id', 'pos'])
 OutputTx = namedtuple('OutputTx', ['key_id', 'value'])
-LowerBlock = namedtuple('LowerBlock', ['H', 'txset', 'signature', 'mset'])
 
 
 class Tx:
