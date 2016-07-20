@@ -382,7 +382,7 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         self.mset += otherTx
         self.otherBlocks += "".join([str(i) for i in otherTx])
-        self.txset += mainTx.serialize
+        self.txset += mainTx.serialize()
         self.txset_tree.add(mainTx.serialize())
         log.msg(mainTx.serialize())
 
