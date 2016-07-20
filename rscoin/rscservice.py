@@ -390,10 +390,9 @@ class RSCFactory(protocol.Factory):
         if self.txCount >= 100:
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest
-            sig = self.sign(H)
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
             lb = [H, self.txset, self.sign(H), self.mset]
-            self.lastLowerBlockHash = sha256(lb).digest
+            self.lastLowerBlockHash = sha256(lb).digest()
             self.txCount = 0
             self.txset_tree = Tree()
             self.mset = []
