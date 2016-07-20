@@ -408,6 +408,14 @@ class RSCFactory(protocol.Factory):
         return get_authorities(self.directory, xID, self.N)
 
 
+    def sign(self, H):
+        """ Generic signature """
+        k = self.key
+        pub = k.pub.export(EcPt.POINT_CONVERSION_UNCOMPRESSED)
+        sig = k.sign(H)
+        return " ".join(map(b64encode, [pub, sig]))
+
+
 def get_authorities(directory, xID, N = 3):
     """ Returns the keys of the authorities for a certain xID """
     d = sorted(directory)
