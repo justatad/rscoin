@@ -388,7 +388,7 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         if len(otherTx) > 0:
             self.mset.append(otherTx)
-        self.otherBlocks += "".join([str(i) for i in otherTx])
+        self.otherBlocks += " ".join([str(i) for i in otherTx])
         self.txset += mainTx.serialize()
         self.txset_tree.add(mainTx.serialize())
 
@@ -417,7 +417,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': ("".join([str(i) for i in self.mset])),
+                        'StringValue': (" ".join([str(i) for i in self.mset])),
                         'DataType': 'String'
                     }
                 }
