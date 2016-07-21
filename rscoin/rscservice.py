@@ -397,7 +397,7 @@ class RSCFactory(protocol.Factory):
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
             #lb = [H, self.txset, self.sign(H), self.mset]
-            log.msg(" ".join(self.mset))
+            log.msg(self.mset)
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
