@@ -245,7 +245,7 @@ class RSCFactory(protocol.Factory):
 
         # Connect to the AWS SQS
         sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName='rscoin')
+        self.queue = sqs.get_queue_by_name(QueueName='rscoin')
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
@@ -398,7 +398,7 @@ class RSCFactory(protocol.Factory):
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
             #lb = [H, self.txset, self.sign(H), self.mset]
-            response = queue.send_message(
+            response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
