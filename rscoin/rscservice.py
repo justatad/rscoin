@@ -409,8 +409,8 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'Binary'
                     },
                     'txset': {
-                        'StringValue': self.txset,
-                        'DataType': 'String'
+                        'BinaryValue': self.txset,
+                        'DataType': 'Binary'
                     },
                     'sig': {
                         'StringValue': self.sign(H),
