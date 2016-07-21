@@ -390,7 +390,6 @@ class RSCFactory(protocol.Factory):
         self.otherBlocks += "".join([str(i) for i in otherTx])
         self.txset += mainTx.serialize()
         self.txset_tree.add(mainTx.serialize())
-        log.msg(" ".join(self.mset))
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 100:
@@ -398,6 +397,7 @@ class RSCFactory(protocol.Factory):
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
             #lb = [H, self.txset, self.sign(H), self.mset]
+            log.msg(" ".join(self.mset))
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
@@ -414,7 +414,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': " ".join(self.mset),
+                        'StringValue': (" ".join(self.mset)),
                         'DataType': 'String'
                     }
                 }
