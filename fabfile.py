@@ -48,19 +48,33 @@ env.roledefs.update({
 from collections import defaultdict
 env.timings = defaultdict(list)
 
-NUM_MACHINES = 4
+NUM_MACHINES = 10
 
 @runs_once
 def ec2start():
     if len(all_machines) < NUM_MACHINES:
         missing = NUM_MACHINES - len(all_machines)
         ec2.create_instances(
-            ImageId='ami-5f29bb2c',
+            ImageId='ami-bbd1b1c8',
             InstanceType='t2.micro',
             SecurityGroupIds= [ 'sg-8b229aec' ],
             SubnetId= 'subnet-06b06f70',
             MinCount=missing,
             MaxCount=missing )
+
+
+@runs_once
+def sqsstart():
+    sqs = boto3.resource('sqs')
+    queue = sqs.create_queue(QueueName='rscoin')
+
+
+@runs_once
+def sqsstop():
+    sqs = boto3.resource('sqs')
+    queue = sqs.get_queue_by_name(QueueName='rscoin')
+    response = queue.delete()
+
 
 @runs_once
 def ec2list():
@@ -78,6 +92,7 @@ def ec2stop():
         ec2.instances.filter(InstanceIds=ids).terminate()
     except Exception as e:
         print e
+    execute(sqsstop)
 
 @roles("servers")
 def time():
@@ -188,6 +203,13 @@ def loaddir():
     with cd('/home/ubuntu/projects/rscoin'):
         put('directory.conf', 'directory.conf')
 
+@roles("servers")
+@parallel
+def ec2keys():
+    with cd('/home/ubuntu'):
+        run('mkdir .aws')
+        put('~/.aws/config', '~/.aws/config')
+
 @roles("clients")
 @parallel
 def loadsecret():
@@ -226,6 +248,8 @@ def deploy():
     execute(keys)
     execute(loaddir)
     execute(loadsecret)
+    execute(ec2keys)
+    execute(sqsstart)
 
 @runs_once
 def experiment1():
