@@ -390,7 +390,7 @@ class RSCFactory(protocol.Factory):
         self.otherBlocks += "".join([str(i) for i in otherTx])
         self.txset += mainTx.serialize()
         self.txset_tree.add(mainTx.serialize())
-        log.msg(mainTx.serialize())
+        log.msg(" ".join(self.mset))
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 100:
