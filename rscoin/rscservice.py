@@ -386,7 +386,7 @@ class RSCFactory(protocol.Factory):
 
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
-        self.mset += otherTx
+        self.mset.append(otherTx)
         self.otherBlocks += "".join([str(i) for i in otherTx])
         self.txset += mainTx.serialize()
         self.txset_tree.add(mainTx.serialize())
