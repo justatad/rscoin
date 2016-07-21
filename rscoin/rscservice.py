@@ -20,6 +20,8 @@ from twisted.python import log
 
 from hippiehug import Tree
 
+import boto3
+
 import rscoin
 
 def load_setup(setup_data):
@@ -241,6 +243,10 @@ class RSCFactory(protocol.Factory):
         self.lastLowerBlockHash = ''
         self.lastHigherBlockHash = ''
 
+        # Connect to the AWS SQS
+        sqs = boto3.resource('sqs')
+        queue = sqs.get_queue_by_name(QueueName='rscoin')
+
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
         self.logname = 'log-%s' % hexlify(self.keyID)
@@ -391,7 +397,28 @@ class RSCFactory(protocol.Factory):
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
-            lb = [H, self.txset, self.sign(H), self.mset]
+            #lb = [H, self.txset, self.sign(H), self.mset]
+            response = queue.send_message(
+                MessageBody='rsc_lb',
+                MessageAttributes={
+                    'H': {
+                        'StringValue': H,
+                        'DataType': 'String'
+                    },
+                    'txset': {
+                        'StringValue': self.txset,
+                        'DataType': 'String'
+                    },
+                    'sig': {
+                        'StringValue': self.sign(H),
+                        'DataType': 'String'
+                    },
+                    'mset': {
+                        'StringValue': self.mset,
+                        'DataType': 'String'
+                    }
+                }
+            )
             self.lastLowerBlockHash = H
             self.txCount = 0
             self.txset_tree = Tree()
