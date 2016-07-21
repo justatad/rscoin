@@ -414,7 +414,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': self.mset,
+                        'StringValue': " ".join(self.mset),
                         'DataType': 'String'
                     }
                 }
