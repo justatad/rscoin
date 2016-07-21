@@ -402,8 +402,8 @@ class RSCFactory(protocol.Factory):
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
-                        'StringValue': H,
-                        'DataType': 'String'
+                        'BinaryValue': H,
+                        'DataType': 'Binary'
                     },
                     'txset': {
                         'StringValue': self.txset,
