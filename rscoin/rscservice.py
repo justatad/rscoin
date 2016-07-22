@@ -471,7 +471,7 @@ class Central_Bank():
     def print_messages(self):
         sqs = boto3.resource('sqs')
         queue = sqs.get_queue_by_name(QueueName='rscoin')
-        for message in queue.receive_messages(MessageAttributeName=['sig']):
+        for message in queue.receive_messages(MessageAttributeNames=['sig']):
             sig_val = ''
             if message.message_attributes is not None:
                     sig_val = message.message_attributes.get('sig').get('StringValue')
