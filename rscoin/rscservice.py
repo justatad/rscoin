@@ -485,7 +485,7 @@ class Central_Bank():
             message.delete()
 
     def process_lower_blocks(self):
-        if time.time() - self.start_time:
+        if time.time() - self.start_time > 60:
             log.msg('Restart the clock')
             self.restart_time()
             #notify_end_epoch()
