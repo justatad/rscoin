@@ -468,12 +468,11 @@ def get_authorities(directory, xID, N = 3):
 
 class Central_Bank():
 
-    def print_messages(self):
+    def __init__(self):
         sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName='rscoin')
-        for message in queue.receive_messages(MessageAttributeNames=['sig']):
-            sig_val = ''
-            if message.message_attributes is not None:
-                    sig_val = message.message_attributes.get('sig').get('StringValue')
-                    log.msg(sig_val)
+        self.queue = sqs.get_queue_by_name(QueueName='rscoin')
+
+    def print_messages(self):
+        for message in self.queue.receive_messages(MessageAttributeNames=['sig']):
+            log.msg(message.message_attributes.get('sig').get('StringValue'))
             message.delete()
