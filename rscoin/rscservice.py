@@ -471,8 +471,25 @@ class Central_Bank():
     def __init__(self):
         sqs = boto3.resource('sqs')
         self.queue = sqs.get_queue_by_name(QueueName='rscoin')
+        self.start_time = time.time()
+        self.lower_blocks = []
+
+    def restart_time(self):
+        self.start_time = time.time()
 
     def print_messages(self):
         for message in self.queue.receive_messages(MessageAttributeNames=['sig'], MaxNumberOfMessages=10):
             log.msg(message.message_attributes.get('sig').get('StringValue'))
             message.delete()
+
+    def process_lower_blocks(self):
+        if self.start_time - time.time() > 300:
+            log.msg('Restart the clock')
+            restart_time()
+            #notify_end_epoch()
+            #generate_higher_block()
+            #notify_new_epoch()
+
+        for message in self.queue.receive_messages(MaxNumberOfMessages=10):
+            log.msg('Grab messages')
+            self.lower_blocks += (message.message_attributes.get('H').get('BinaryValue'), message.message_attributes.get('txset').get('BinaryValue'), message.message_attributes.get('sig').get('StringValue'), message.message_attributes.get('mset').get('StringValue'))
