@@ -473,6 +473,6 @@ class Central_Bank():
         self.queue = sqs.get_queue_by_name(QueueName='rscoin')
 
     def print_messages(self):
-        for message in self.queue.receive_messages(MessageAttributeNames=['sig'], MaxNumberofMessages=10):
+        for message in self.queue.receive_messages(MessageAttributeNames=['sig'], MaxNumberOfMessages=10):
             log.msg(message.message_attributes.get('sig').get('StringValue'))
             message.delete()
