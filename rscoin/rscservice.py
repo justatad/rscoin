@@ -476,4 +476,4 @@ class Central_Bank():
             if message.message_attributes is not None:
                     sig_val = message.message_attributes.get('sig').get('StringValue')
                     log.msg(sig_val)
-        message.delete()
+            message.delete()
