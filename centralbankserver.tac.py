@@ -7,5 +7,5 @@ from base64 import b64encode, b64decode
 
 
 application = service.Application("rscoin")
-ts = TimerService(60, central_bank_processing)
+ts = TimerService(60, Central_Bank.print_message())
 ts.setServiceParent(application)
