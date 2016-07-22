@@ -8,5 +8,5 @@ from base64 import b64encode, b64decode
 this_bank = Central_Bank()
 
 application = service.Application("rscoin")
-ts = TimerService(60, this_bank.print_messages)
+ts = TimerService(5, this_bank.process_lower_blocks)
 ts.setServiceParent(application)

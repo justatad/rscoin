@@ -485,13 +485,13 @@ class Central_Bank():
             message.delete()
 
     def process_lower_blocks(self):
-        if self.start_time - time.time() > 300:
+        if self.start_time - time.time() > 60:
             log.msg('Restart the clock')
             restart_time()
             #notify_end_epoch()
             #generate_higher_block()
             #notify_new_epoch()
 
-        for message in self.queue.receive_messages(MaxNumberOfMessages=10):
+        for message in self.queue.receive_messages(MessageAttributeNames=['All'], MaxNumberOfMessages=10):
             log.msg('Grab messages')
             self.lower_blocks += (message.message_attributes.get('H').get('BinaryValue'), message.message_attributes.get('txset').get('BinaryValue'), message.message_attributes.get('sig').get('StringValue'), message.message_attributes.get('mset').get('StringValue'))
