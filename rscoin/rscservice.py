@@ -18,7 +18,7 @@ from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
 
-from hippiehug import Tree
+from hippiehug import Chain
 
 import boto3
 
