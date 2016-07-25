@@ -502,7 +502,7 @@ class Central_Bank:
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + " ".join([str(i) for i in mset_list])  + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
-            all_good = false
+            all_good = False
         key = rscoin.Key(mintette_id)
         all_good &= key.verify(H_mintette, sig)
 
