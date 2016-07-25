@@ -18,7 +18,7 @@ from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
 
-from hippiehug import Chain
+from hippiehug import Chain, Tree
 
 import boto3
 
@@ -239,7 +239,7 @@ class RSCFactory(protocol.Factory):
         self.kid = self.key.id()
         self.N = N
         self.txCount = 1
-        self.txset_chain = Chain()
+        self.txset_tree = Tree()
         self.mset = []
         self.otherBlocks = ''
         self.txset = []
@@ -393,7 +393,7 @@ class RSCFactory(protocol.Factory):
             self.mset.append(otherTx)
             self.otherBlocks += " ".join([str(i) for i in otherTx])
         self.txset.append(mainTx)
-        self.txset_chain.add(mainTx)
+        self.txset_tree.add(mainTx)
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 100:
@@ -493,11 +493,11 @@ class Central_Bank:
     def validate_lower_block(self, lower_block):
         all_good = true
         H_mintette, txset, sig, mset, mintette_id = lower_block
-        txset_chain = Chain()
+        txset_tree = Tree()
 
         txset_list = txset.split(" ")
         for i in txset_list:
-            txset_chain.add(i)
+            txset_tree.add(i)
         mset_list = mset.split(" ")
         H = sha256(self.lastHigherBlockHash + mintette_hashes[mintette_id] + "".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
         if H_mintette != H:
