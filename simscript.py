@@ -12,7 +12,7 @@ f2 = file(sys.argv[2]+"-r2", "w")
 
 
 # Build a set of "addresses"
-num_addresses = 100
+num_addresses = 5
 keys = []
 
 for _ in range(num_addresses):
@@ -56,9 +56,9 @@ while active_addrs != []:
     (tx1_id, pos1, (k1id, k1pub, k1), val1), txin1 = active_addrs.pop()
     (tx2_id, pos2, (k2id, k2pub, k2), val2), txin2 = active_addrs.pop()
 
-    tx = Tx([InputTx(tx1_id, pos1), InputTx(tx2_id, pos2)], 
+    tx = Tx([InputTx(tx1_id, pos1), InputTx(tx2_id, pos2)],
                     [OutputTx(k1id, 1), OutputTx(k2id, 1)])
-    
+
     _, _, core = package_query(tx, [txin1, txin2], [k1, k2])
 
     _, (_, xxotherTx, xxkeys, xxsigs) = RSCProtocol.parse_Tx_bundle(len(core), core)
@@ -77,9 +77,9 @@ while active_addrs2 != []:
     (tx1_id, pos1, (k1id, k1pub, k1), val1), txin1 = active_addrs2.pop()
     (tx2_id, pos2, (k2id, k2pub, k2), val2), txin2 = active_addrs2.pop()
 
-    tx = Tx([InputTx(tx1_id, pos1), InputTx(tx2_id, pos2)], 
+    tx = Tx([InputTx(tx1_id, pos1), InputTx(tx2_id, pos2)],
                     [OutputTx(k1id, 1), OutputTx(k2id, 1)])
-    
+
     _, _, core = package_query(tx, [txin1, txin2], [k1, k2])
 
     _, (_, xxotherTx, xxkeys, xxsigs) = RSCProtocol.parse_Tx_bundle(len(core), core)
