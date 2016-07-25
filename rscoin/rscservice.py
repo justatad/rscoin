@@ -236,7 +236,7 @@ class RSCFactory(protocol.Factory):
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
         self.keyID = self.key.id()[:10]
-        self.kid = self.key.id()
+        self.kid = b64encode(self.key.id())
         self.N = N
         self.txCount = 1
         self.txset_tree = Tree()
