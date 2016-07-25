@@ -483,7 +483,7 @@ class Central_Bank:
         self.lastHigherBlockHash = ''
         dir = [(kid, ip, port) for (kid, ip, port) in directory]
         for (kid, ip, port) in dir:
-            mintette_hashes[(b64encode(kid))] = ''
+            self.mintette_hashes[(b64encode(kid))] = ''
 
 
     def restart_time(self):
