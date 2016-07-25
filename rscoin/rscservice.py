@@ -242,7 +242,7 @@ class RSCFactory(protocol.Factory):
         self.txset_chain = Chain()
         self.mset = []
         self.otherBlocks = ''
-        self.txset = ''
+        self.txset = []
         self.lastLowerBlockHash = ''
         self.lastHigherBlockHash = ''
 
