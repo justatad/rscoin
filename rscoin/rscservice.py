@@ -479,12 +479,10 @@ class Central_Bank:
         self.queue = sqs.get_queue_by_name(QueueName='rscoin')
         self.start_time = time.time()
         self.lower_blocks = []
-        mintette_hashes = dict()
-        mintette_pubkeys = dict()
+        self.mintette_hashes = dict()
         self.lastHigherBlockHash = ''
         dir = [(kid, ip, port) for (kid, ip, port) in directory]
         for (kid, ip, port) in dir:
-            mintette_pubkeys[(b64encode(kid))] = ''
             mintette_hashes[(b64encode(kid))] = ''
 
 
