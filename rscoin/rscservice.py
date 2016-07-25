@@ -236,9 +236,10 @@ class RSCFactory(protocol.Factory):
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
         self.keyID = self.key.id()[:10]
+        self.kid = self.key.id()
         self.N = N
         self.txCount = 1
-        self.txset_tree = Tree()
+        self.txset_chain = Chain()
         self.mset = []
         self.otherBlocks = ''
         self.txset = ''
@@ -390,16 +391,15 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         if len(otherTx) > 0:
             self.mset.append(otherTx)
-        self.otherBlocks += " ".join([str(i) for i in otherTx])
-        self.txset += mainTx.serialize()
-        self.txset_tree.add(mainTx.serialize())
+            self.otherBlocks += " ".join([str(i) for i in otherTx])
+        self.txset.append(mainTx)
+        self.txset_chain.add(mainTx)
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 100:
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
-            #lb = [H, self.txset, self.sign(H), self.mset]
             if len(self.mset) == 0:
                 self.mset = '-'
             log.msg(self.mset)
@@ -411,8 +411,8 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'Binary'
                     },
                     'txset': {
-                        'BinaryValue': self.txset,
-                        'DataType': 'Binary'
+                        'StringValue': (" ".join([str(i) for i in self.txset])),
+                        'DataType': 'String'
                     },
                     'sig': {
                         'StringValue': self.sign(H),
@@ -421,15 +421,19 @@ class RSCFactory(protocol.Factory):
                     'mset': {
                         'StringValue': (" ".join([str(i) for i in self.mset])),
                         'DataType': 'String'
+                    },
+                    'mintette_id': {
+                        'StringValue': self.kid,
+                        'DataType': 'String'
                     }
                 }
             )
             self.lastLowerBlockHash = H
             self.txCount = 0
-            self.txset_tree = Tree()
+            self.txset_chain = Chain()
             self.mset = []
             self.otherBlocks = ''
-            self.txset = ''
+            self.txset = []
 
         return all_good
 
@@ -468,21 +472,39 @@ def get_authorities(directory, xID, N = 3):
     return auths
 
 
-class Central_Bank():
+class Central_Bank:
 
-    def __init__(self):
+    def __init__(self, directory):
         sqs = boto3.resource('sqs')
         self.queue = sqs.get_queue_by_name(QueueName='rscoin')
         self.start_time = time.time()
         self.lower_blocks = []
+        mintette_hashes = dict()
+        dir = [(kid, ip, port) for (kid, ip, port) in directory]
+        for (kid, ip, port) in dir:
+            mintette_pubkeys[(b64encode(kid))] = ''
+            mintette_hashes[(b64encode(kid))] = ''
+
 
     def restart_time(self):
         self.start_time = time.time()
 
-    def print_messages(self):
-        for message in self.queue.receive_messages(MessageAttributeNames=['sig'], MaxNumberOfMessages=10):
-            log.msg(message.message_attributes.get('sig').get('StringValue'))
-            message.delete()
+
+    def validate_lower_block(self, lower_block):
+        all_good = true
+        H_mintette, txset, sig, mset, mintette_id = lower_block
+        txset_chain = Chain()
+
+        txset_list = txset.split(" ")
+        for i in txset_list:
+            txset_chain.add(i)
+        mset_list = mset.split(" ")
+        H = sha256(self.lastHigherBlockHash + mintette_hashes[mintette_id] + "".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
+        if H_mintette != H:
+            log.msg('Lower block hash not valid')
+            all_good = false
+
+
 
     def process_lower_blocks(self):
         if time.time() - self.start_time > 60:
