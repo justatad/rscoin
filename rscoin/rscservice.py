@@ -399,7 +399,8 @@ class RSCFactory(protocol.Factory):
         if self.txCount >= 100:
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).hexdigest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
+            H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).hexdigest()
             if len(self.mset) == 0:
                 self.mset = '-'
             log.msg(self.mset)
@@ -407,7 +408,7 @@ class RSCFactory(protocol.Factory):
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
-                        'StringValue': H,
+                        'StringValue': H_hex,
                         'DataType': 'String'
                     },
                     'txset': {
