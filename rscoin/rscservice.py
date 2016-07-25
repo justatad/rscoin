@@ -396,7 +396,7 @@ class RSCFactory(protocol.Factory):
         self.txset_tree.add(mainTx.id())
 
         # Check to see if enough transactions have been received to close the epoch
-        if self.txCount >= 100:
+        if self.txCount >= 2:
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
