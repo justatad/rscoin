@@ -399,7 +399,7 @@ class RSCFactory(protocol.Factory):
         if self.txCount >= 100:
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).hexdigest()
             if len(self.mset) == 0:
                 self.mset = '-'
             log.msg(self.mset)
@@ -407,8 +407,8 @@ class RSCFactory(protocol.Factory):
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
-                        'BinaryValue': H,
-                        'DataType': 'Binary'
+                        'StringValue': H,
+                        'DataType': 'String'
                     },
                     'txset': {
                         'StringValue': (" ".join([str(i) for i in self.txset])),
@@ -498,16 +498,15 @@ class Central_Bank:
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(b64decode(i))
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).hexdigest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
-	    log.msg(self.lastHigherBlockHash)
-	    log.msg(self.mintette_hashes[mintette_id])
-	    log.msg(txset_tree.root())
+	    log.msg(H)
+	    log.msg(H_mintette)
             all_good = False
         sig_elements = sig.split(" ")
-        key = rscoin.Key(b64decode(sig_elements[0]))
-        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
+        #key = rscoin.Key(b64decode(sig_elements[0]))
+        #all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
 
         return all_good
 
@@ -522,7 +521,7 @@ class Central_Bank:
 
         for message in self.queue.receive_messages(MessageAttributeNames=['All'], MaxNumberOfMessages=10):
             log.msg('Grab messages')
-            lower_block = (message.message_attributes.get('H').get('BinaryValue'),
+            lower_block = (message.message_attributes.get('H').get('StringValue'),
                                 message.message_attributes.get('txset').get('StringValue'),
                                 message.message_attributes.get('sig').get('StringValue'),
                                 message.message_attributes.get('mset').get('StringValue'),
