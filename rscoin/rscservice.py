@@ -497,15 +497,17 @@ class Central_Bank:
 
         txset_list = txset.split(" ")
         for i in txset_list:
-            txset_tree.add(i)
-        mset_list = mset.split(" ")
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + " ".join([str(i) for i in mset_list])  + txset_tree.root()).digest()
+            txset_tree.add(b64decode(i))
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
+	    log.msg(self.lastHigherBlockHash)
+	    log.msg(self.mintette_hashes[mintette_id])
+	    log.msg(txset_tree.root())
             all_good = False
         sig_elements = sig.split(" ")
-        key = sig_elements.pop[0].Key()
-        all_good &= key.verify(H_mintette, sig)
+        key = rscoin.Key(b64decode(sig_elements[0]))
+        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
 
         return all_good
 
