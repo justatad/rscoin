@@ -503,7 +503,8 @@ class Central_Bank:
         if H_mintette != H:
             log.msg('Lower block hash not valid')
             all_good = False
-        key = rscoin.Key(mintette_id)
+        sig_elements = sig.split(" ")
+        key = sig_elements.pop[0].Key()
         all_good &= key.verify(H_mintette, sig)
 
         return all_good
