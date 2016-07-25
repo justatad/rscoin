@@ -501,7 +501,7 @@ class Central_Bank:
         for i in txset_list:
             txset_tree.add(i)
         mset_list = mset.split(" ")
-        H = sha256(self.lastHigherBlockHash + mintette_hashes[mintette_id] + " ".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + " ".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
             all_good = false
