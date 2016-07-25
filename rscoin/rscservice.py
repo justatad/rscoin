@@ -426,6 +426,10 @@ class RSCFactory(protocol.Factory):
                     'mintette_id': {
                         'StringValue': self.kid,
                         'DataType': 'String'
+                    },
+                    'tree_root': {
+                        'StringValue': self.txset_tree.root(),
+                        'DataType': 'String'
                     }
                 }
             )
