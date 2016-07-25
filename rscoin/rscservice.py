@@ -392,7 +392,7 @@ class RSCFactory(protocol.Factory):
         if len(otherTx) > 0:
             self.mset.append(otherTx)
             self.otherBlocks += " ".join([str(i) for i in otherTx])
-        self.txset.append(mainTx.id())
+        self.txset.append(b64encode(mainTx.id()))
         self.txset_tree.add(mainTx.id())
 
         # Check to see if enough transactions have been received to close the epoch
