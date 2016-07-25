@@ -480,6 +480,8 @@ class Central_Bank:
         self.start_time = time.time()
         self.lower_blocks = []
         mintette_hashes = dict()
+        mintette_pubkeys = dict()
+        self.lastHigherBlockHash = ''
         dir = [(kid, ip, port) for (kid, ip, port) in directory]
         for (kid, ip, port) in dir:
             mintette_pubkeys[(b64encode(kid))] = ''
@@ -491,7 +493,7 @@ class Central_Bank:
 
 
     def validate_lower_block(self, lower_block):
-        all_good = true
+        all_good = True
         H_mintette, txset, sig, mset, mintette_id = lower_block
         txset_tree = Tree()
 
@@ -499,11 +501,14 @@ class Central_Bank:
         for i in txset_list:
             txset_tree.add(i)
         mset_list = mset.split(" ")
-        H = sha256(self.lastHigherBlockHash + mintette_hashes[mintette_id] + "".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
+        H = sha256(self.lastHigherBlockHash + mintette_hashes[mintette_id] + " ".join([str(i) for i in mset_list])  + txset_chain.root()).digest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
             all_good = false
+        key = rscoin.Key(mintette_id)
+        all_good &= key.verify(H_mintette, sig)
 
+        return all_good
 
 
     def process_lower_blocks(self):
@@ -516,4 +521,11 @@ class Central_Bank:
 
         for message in self.queue.receive_messages(MessageAttributeNames=['All'], MaxNumberOfMessages=10):
             log.msg('Grab messages')
-            self.lower_blocks += (message.message_attributes.get('H').get('BinaryValue'), message.message_attributes.get('txset').get('BinaryValue'), message.message_attributes.get('sig').get('StringValue'), message.message_attributes.get('mset').get('StringValue'))
+            lower_block = (message.message_attributes.get('H').get('BinaryValue'),
+                                message.message_attributes.get('txset').get('StringValue'),
+                                message.message_attributes.get('sig').get('StringValue'),
+                                message.message_attributes.get('mset').get('StringValue'),
+                                message.message_attributes.get('mintette_id').get('StringValue'))
+            if validate_lower_block(lower_block) == True:
+                log.msg('Lower block valid')
+                self.lower_blocks += lower_block
