@@ -526,6 +526,6 @@ class Central_Bank:
                                 message.message_attributes.get('sig').get('StringValue'),
                                 message.message_attributes.get('mset').get('StringValue'),
                                 message.message_attributes.get('mintette_id').get('StringValue'))
-            if validate_lower_block(lower_block) == True:
+            if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 self.lower_blocks += lower_block
