@@ -399,7 +399,7 @@ class RSCFactory(protocol.Factory):
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 2:
             if len(self.mset) == 0:
-                mset_output = ''
+                mset_output = ' '
             if len(self.mset) == 1:
                 mset_output = self.mset[0]
             if  len(self.mset) > 1:
