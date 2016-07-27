@@ -503,7 +503,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id, tree_root = lower_block
+        H_mintette, txset, sig, mset, mintette_id = lower_block
         txset_tree = Tree()
 
         txset_list = txset.split(" ")
