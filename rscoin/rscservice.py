@@ -392,7 +392,7 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         if len(otherTx) >= 1:
             self.mset |= set(otherTx)
-        self.txset |= set(b64encode(mainTx.id()))
+        self.txset |= set(mainTx.id())
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 2:
@@ -513,7 +513,7 @@ class Central_Bank:
 
         txset_list = txset.split(" ")
         for i in txset_list:
-            txset_tree.add(b64decode(i))
+            txset_tree.add(i)
         log.msg(b64encode(txset_tree.root()))
         log.msg(tree_root)
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).hexdigest()
