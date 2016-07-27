@@ -331,6 +331,7 @@ class RSCFactory(protocol.Factory):
     def process_TxCommit(self, data):
         """ Provides a Tx and a list of responses, and commits the transaction. """
         H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig = data
+        mset_output = ''
 
         # Check that this Tx is handled by this server
         ik = mainTx.id()
@@ -389,20 +390,24 @@ class RSCFactory(protocol.Factory):
 
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
-        otherTx_list = otherTx.split(" ")
-        if len(otherTx_list) >= 1:
+        if len(otherTx) >= 1:
             self.mset.append(otherTx)
-            self.otherBlocks += " ".join([str(i) for i in otherTx_list])
         self.txset.append(b64encode(mainTx.id()))
         self.txset_tree.add(mainTx.id())
 
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 2:
+            if len(self.mset) == 0:
+                mset_output = ''
+            if len(self.mset) == 1:
+                mset_output = self.mset[0]
+            if  len(self.mset) > 1:
+                mset_output += " ".join([str(i) for i in self.mset])
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).digest()
-            H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.otherBlocks + self.txset_tree.root()).hexdigest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.mset_output + self.txset_tree.root()).digest()
+            H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.mset_output + self.txset_tree.root()).hexdigest()
             if len(self.mset) == 0:
                 self.mset = '-'
             log.msg(self.mset)
@@ -422,7 +427,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': (self.otherBlocks),
+                        'StringValue': (mset_output),
                         'DataType': 'String'
                     },
                     'mintette_id': {
