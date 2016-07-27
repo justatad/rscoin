@@ -391,7 +391,7 @@ class RSCFactory(protocol.Factory):
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
         if len(otherTx) >= 1:
-            self.mset.add(otherTx)
+            self.mset |= set(otherTx)
         self.txset.append(b64encode(mainTx.id()))
         self.txset_tree.add(mainTx.id())
 
