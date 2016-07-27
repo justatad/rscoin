@@ -241,7 +241,7 @@ class RSCFactory(protocol.Factory):
         self.txCount = 1
         self.txset_tree = Tree()
         self.mset = []
-        self.otherBlocks = ''
+        self.otherBlocks = '-'
         self.txset = []
         self.lastLowerBlockHash = ''
         self.lastHigherBlockHash = ''
@@ -389,11 +389,13 @@ class RSCFactory(protocol.Factory):
 
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
-        if len(otherTx) > 0:
+        otherTx_list = otherTx.split(" ")
+        if len(otherTx_list) >= 1:
             self.mset.append(otherTx)
-            self.otherBlocks += " ".join([str(i) for i in otherTx])
+            self.otherBlocks += " ".join([str(i) for i in otherTx_list])
         self.txset.append(b64encode(mainTx.id()))
         self.txset_tree.add(mainTx.id())
+
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 2:
@@ -420,7 +422,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': (" ".join([str(i) for i in self.mset])),
+                        'StringValue': (self.otherBlocks),
                         'DataType': 'String'
                     },
                     'mintette_id': {
@@ -483,7 +485,6 @@ class Central_Bank:
         sqs = boto3.resource('sqs')
         self.queue = sqs.get_queue_by_name(QueueName='rscoin')
         self.start_time = time.time()
-        self.lower_blocks = []
         self.mintette_hashes = dict()
         self.lastHigherBlockHash = ''
         dir = [(kid, ip, port) for (kid, ip, port) in directory]
