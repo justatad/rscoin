@@ -240,7 +240,7 @@ class RSCFactory(protocol.Factory):
         self.N = N
         self.txCount = 1
         self.txset_tree = Tree()
-        self.mset = []
+        self.mset = set()
         self.otherBlocks = '-'
         self.txset = []
         self.lastLowerBlockHash = ''
@@ -391,7 +391,7 @@ class RSCFactory(protocol.Factory):
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
         if len(otherTx) >= 1:
-            self.mset.append(otherTx)
+            self.mset.add(otherTx)
         self.txset.append(b64encode(mainTx.id()))
         self.txset_tree.add(mainTx.id())
 
@@ -401,7 +401,7 @@ class RSCFactory(protocol.Factory):
             if len(self.mset) == 0:
                 mset_output = ' '
             if len(self.mset) == 1:
-                mset_output = b64encode(self.mset[0])
+                mset_output = b64encode(self.mset)
             if  len(self.mset) > 1:
                 mset_output += " ".join([b64encode(str(i)) for i in self.mset])
 
@@ -544,3 +544,4 @@ class Central_Bank:
             if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 self.lower_blocks += lower_block
+                message.delete()
