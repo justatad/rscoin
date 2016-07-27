@@ -406,8 +406,8 @@ class RSCFactory(protocol.Factory):
                 mset_output += " ".join([str(i) for i in self.mset])
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.mset_output + self.txset_tree.root()).digest()
-            H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + self.mset_output + self.txset_tree.root()).hexdigest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
+            H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).hexdigest()
             if len(self.mset) == 0:
                 self.mset = '-'
             log.msg(self.mset)
