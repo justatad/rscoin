@@ -411,6 +411,7 @@ class RSCFactory(protocol.Factory):
 
             # Need to add hash of prev higher block
             H_hex = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).hexdigest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             if len(self.mset) == 0:
                 self.mset = '-'
             response = self.queue.send_message(
@@ -425,7 +426,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'sig': {
-                        'StringValue': self.sign(H_hex),
+                        'StringValue': self.sign(H),
                         'DataType': 'String'
                     },
                     'mset': {
