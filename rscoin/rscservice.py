@@ -401,9 +401,9 @@ class RSCFactory(protocol.Factory):
             if len(self.mset) == 0:
                 mset_output = ' '
             if len(self.mset) == 1:
-                mset_output = self.mset[0]
+                mset_output = b64encode(self.mset[0])
             if  len(self.mset) > 1:
-                mset_output += " ".join([str(i) for i in self.mset])
+                mset_output += " ".join([b64encode(str(i)) for i in self.mset])
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
@@ -440,7 +440,7 @@ class RSCFactory(protocol.Factory):
                     }
                 }
             )
-            self.lastLowerBlockHash = H
+            #self.lastLowerBlockHash = H
             self.txCount = 0
             self.txset_chain = Chain()
             self.mset = []
@@ -492,6 +492,7 @@ class Central_Bank:
         self.start_time = time.time()
         self.mintette_hashes = dict()
         self.lastHigherBlockHash = ''
+        self.lower_blocks = []
         dir = [(kid, ip, port) for (kid, ip, port) in directory]
         for (kid, ip, port) in dir:
             self.mintette_hashes[(b64encode(kid))] = ''
