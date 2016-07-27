@@ -404,7 +404,7 @@ class RSCFactory(protocol.Factory):
                 mset_output += " ".join([b64encode(str(i)) for i in self.mset])
             if len(self.txset) == 1:
                 txset_output += b64encode(self.txset)
-            if en(self.txset) > 1:
+            if len(self.txset) > 1:
                 txset_output += " ".join([b64encode(str(i)) for i in self.txset])
             for i in self.txset:
                 self.txset_tree.add(b64encode(i))
