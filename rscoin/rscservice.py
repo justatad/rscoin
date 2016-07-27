@@ -241,8 +241,7 @@ class RSCFactory(protocol.Factory):
         self.txCount = 1
         self.txset_tree = Tree()
         self.mset = set()
-        self.otherBlocks = '-'
-        self.txset = []
+        self.txset = set()
         self.lastLowerBlockHash = ''
         self.lastHigherBlockHash = ''
 
@@ -332,6 +331,7 @@ class RSCFactory(protocol.Factory):
         """ Provides a Tx and a list of responses, and commits the transaction. """
         H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig = data
         mset_output = ''
+        txset_output = ''
 
         # Check that this Tx is handled by this server
         ik = mainTx.id()
@@ -392,9 +392,7 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         if len(otherTx) >= 1:
             self.mset |= set(otherTx)
-        self.txset.append(b64encode(mainTx.id()))
-        self.txset_tree.add(mainTx.id())
-
+        self.txset != set(b64encode(mainTx.id()))
 
         # Check to see if enough transactions have been received to close the epoch
         if self.txCount >= 2:
@@ -404,6 +402,12 @@ class RSCFactory(protocol.Factory):
                 mset_output = b64encode(self.mset)
             if  len(self.mset) > 1:
                 mset_output += " ".join([b64encode(str(i)) for i in self.mset])
+            if len(self.txset) == 1:
+                txset_output += b64encode(self.txset)
+            if en(self.txset) > 1:
+                txset_output += " ".join([b64encode(str(i)) for i in self.txset])
+            for i in self.txset:
+                self.txset_tree.add(b64encode(i))
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
@@ -419,7 +423,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'txset': {
-                        'StringValue': (" ".join([str(i) for i in self.txset])),
+                        'StringValue': txset_output,
                         'DataType': 'String'
                     },
                     'sig': {
@@ -427,7 +431,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'mset': {
-                        'StringValue': (mset_output),
+                        'StringValue': mset_output,
                         'DataType': 'String'
                     },
                     'mintette_id': {
@@ -444,8 +448,8 @@ class RSCFactory(protocol.Factory):
             self.txCount = 0
             self.txset_chain = Chain()
             self.mset = set()
-            self.otherBlocks = ''
-            self.txset = []
+            self.txset = set()
+
 
         return all_good
 
