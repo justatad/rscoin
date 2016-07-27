@@ -426,6 +426,10 @@ class RSCFactory(protocol.Factory):
                     'mintette_id': {
                         'StringValue': self.kid,
                         'DataType': 'String'
+                    },
+                    'tree_root': {
+                        'StringValue': b64encode(self.txset_tree.root()),
+                        'DataType': 'String'
                     }
                 }
             )
@@ -493,12 +497,14 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id = lower_block
+        H_mintette, txset, sig, mset, mintette_id, tree_root = lower_block
         txset_tree = Tree()
 
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(b64decode(i))
+        log.msg(b64encode(txset_tree.root()))
+        log.msg(tree_root)
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).hexdigest()
         if H_mintette != H:
             log.msg('Lower block hash not valid')
@@ -526,7 +532,8 @@ class Central_Bank:
                                 message.message_attributes.get('txset').get('StringValue'),
                                 message.message_attributes.get('sig').get('StringValue'),
                                 message.message_attributes.get('mset').get('StringValue'),
-                                message.message_attributes.get('mintette_id').get('StringValue'))
+                                message.message_attributes.get('mintette_id').get('StringValue'),
+                                message.message_attributes.get('tree_root').get('StringValue'))
             if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 self.lower_blocks += lower_block
