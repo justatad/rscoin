@@ -443,7 +443,7 @@ class RSCFactory(protocol.Factory):
             #self.lastLowerBlockHash = H
             self.txCount = 0
             self.txset_chain = Chain()
-            self.mset = []
+            self.mset = set()
             self.otherBlocks = ''
             self.txset = []
 
