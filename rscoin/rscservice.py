@@ -446,7 +446,7 @@ class RSCFactory(protocol.Factory):
             )
             #self.lastLowerBlockHash = H
             self.txCount = 0
-            self.txset_chain = Chain()
+            self.txset_tree = Tree()
             self.mset = set()
             self.txset = set()
 
