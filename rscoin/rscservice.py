@@ -485,7 +485,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'epoch_id': {
-                        'StrngValue': str(self.epochId),
+                        'StringValue': str(self.epochId),
                         'DataType': 'String'
                     }
                 }
