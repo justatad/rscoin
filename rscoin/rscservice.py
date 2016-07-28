@@ -473,7 +473,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'sig': {
-                        'StringValue': self.sign(H),
+                        'StringValue': self.sign(b64encode(H)),
                         'DataType': 'String'
                     },
                     'mset': {
@@ -601,7 +601,7 @@ class Central_Bank:
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
         key = rscoin.Key(b64decode(sig_elements[0]))
-        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
+        all_good &= key.verify(b64encode(H_mintette), b64decode(sig_elements[1]))
         if not all_good:
             log.msg("Signatue verification failed for lower level block from mintette %s" % mintette_id)
             return False
