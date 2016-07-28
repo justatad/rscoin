@@ -516,7 +516,7 @@ class Central_Bank:
             all_good = False
         sig_elements = sig.split(" ")
         key = rscoin.Key(b64decode(sig_elements[0]))
-        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
+        all_good &= key.verify(H, b64decode(sig_elements[1]))
 
         return all_good
 
