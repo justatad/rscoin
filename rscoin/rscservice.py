@@ -461,8 +461,9 @@ class RSCFactory(protocol.Factory):
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             if len(self.mset) == 0:
                 self.mset = '-'
-            if self.epochId == 1:
+            if self.lastHigherBlockHash == '':
                 self.lastHigherBlockHash = '-'
+            if self.lastLowerBlockHash == '':
                 self.lastLowerBlockHash = '-'
             else:
                 self.lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
