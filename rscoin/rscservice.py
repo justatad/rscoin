@@ -515,9 +515,8 @@ class RSCconnection(LineReceiver):
 
     def lineReceived(self, line):
         self.factory.add_to_buffer(line)
-
-    self.factory.should_close = True
-    self.transport.loseConnection()
+        self.factory.should_close = True
+        self.transport.loseConnection()
 
     def connectionLost(self, reason):
         if not self.factory.should_close:
