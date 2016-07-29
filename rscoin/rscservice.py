@@ -459,7 +459,7 @@ class RSCFactory(protocol.Factory):
                 mset_output += " ".join([b64encode(str(i)) for i in self.txset])
 
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            lower_block = (H, txset_output, self.sign(H), memset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()))
+            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()))
             self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
