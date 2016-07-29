@@ -12,7 +12,7 @@ f2 = file(sys.argv[2]+"-r2", "w")
 
 
 # Build a set of "addresses"
-num_addresses = 5
+num_addresses = 100
 keys = []
 
 for _ in range(num_addresses):
