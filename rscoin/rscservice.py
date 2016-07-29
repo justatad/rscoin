@@ -458,15 +458,15 @@ class RSCFactory(protocol.Factory):
                 self.txset_tree.add(b64encode(i))
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).hexdigest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             if len(self.mset) == 0:
                 self.mset = '-'
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
-                        'StringValue': H,
-                        'DataType': 'String'
+                        'BinaryValue': H,
+                        'DataType': 'Binary'
                     },
                     'txset': {
                         'StringValue': txset_output,
@@ -611,7 +611,7 @@ class Central_Bank:
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(i)
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).hexdigest()
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
 	    log.msg(H_mintette)
@@ -646,7 +646,7 @@ class Central_Bank:
             self.restart_time()
 
         for message in self.queue.receive_messages(MessageAttributeNames=['All'], MaxNumberOfMessages=10):
-            lower_block = (message.message_attributes.get('H').get('StringValue'),
+            lower_block = (message.message_attributes.get('H').get('BinaryValue'),
                                 message.message_attributes.get('txset').get('StringValue'),
                                 message.message_attributes.get('sig').get('StringValue'),
                                 message.message_attributes.get('mset').get('StringValue'),
