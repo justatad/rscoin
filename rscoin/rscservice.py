@@ -14,7 +14,9 @@ from os.path import join
 
 from petlib.ec import EcPt
 
-from twisted.internet import protocol
+from twisted.internet import protocol, reactor, defer
+from twisted.internet.endpoints import TCP4ClientEndpoint
+from twisted.internet.protocol import Factory, Protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
 
@@ -523,7 +525,7 @@ class Central_Bank:
         self.central_bank_chain = DocChain()
 
 
-    def broadcast(small_dir, data):
+    def broadcast(self, small_dir, data):
         d_list = []
         responses = []
         # d = defer.Deferred()
@@ -532,17 +534,12 @@ class Central_Bank:
             p.sendLine(data)
 
         for (kid, ip, port) in small_dir:
-            _stats[ip] += 1
             point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=10)
-            f = RSCfactory()
+            f = Factory()
 
             d = point.connect(f)
             d.addCallback(gotProtocol)
-            d.addErrback(f.d.errback)
 
-            d_list += [ f.d ]
-
-        d_all = defer.gatherResults(d_list)
         return d_all
 
 
@@ -599,11 +596,11 @@ class Central_Bank:
 
 
     def process_lower_blocks(self):
-        if time.time() - self.start_time > 60:
+        if time.time() - self.start_time > 30:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
             p_msg = "xClosePeriod"
-            d = broadcast(self.dir, p_msg)
+            d = self.broadcast(self.dir, p_msg)
             d.addCallback(get_period_responses)
             d.addErrback(d_end.errback)
 
@@ -625,8 +622,9 @@ class Central_Bank:
 
 
         lower_block = self.queue.get()
+	log.msg(lower_block)
 
-        if lower_block != '':
+        if lower_block is not None:
             if self.validate_lower_block(lower_block) == True:
                     log.msg('Lower block valid')
                     #self.lower_blocks += lower_block
