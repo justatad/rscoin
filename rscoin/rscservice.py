@@ -595,6 +595,7 @@ class Central_Bank:
                     print resp
                     d_end.errback(Exception("Period notification failed."))
                     return
+
             print "Period OK"
             d_end.callback()
         except Exception as e:
