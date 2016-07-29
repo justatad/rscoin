@@ -20,7 +20,7 @@ from twisted.python import log
 
 from hippiehug import DocChain, Tree
 
-import boto3
+from hotqueue import HotQueue
 
 import time
 
@@ -292,9 +292,8 @@ class RSCFactory(protocol.Factory):
         self.periodStatus = 'Open'
         self.epochId = 0
 
-        # Connect to the AWS SQS
-        sqs = boto3.resource('sqs')
-        self.queue = sqs.get_queue_by_name(QueueName='rscoin')
+        # Connect to Redis
+        self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
@@ -444,76 +443,25 @@ class RSCFactory(protocol.Factory):
         # Check to see if enough transactions have been received and close the epoch if they have
         if self.txCount >= 100 and self.periodStatus == 'Open':
             self.epochId += 1
-            if len(self.mset) == 0:
-                mset_output = ' '
+
+        if len(self.mset) == 0:
+            mset_output = ''
             if len(self.mset) == 1:
                 mset_output = b64encode(self.mset)
             if  len(self.mset) > 1:
                 mset_output += " ".join([b64encode(str(i)) for i in self.mset])
-            if len(self.txset) == 1:
-                txset_output += b64encode(self.txset)
-            if len(self.txset) > 1:
-                txset_output += " ".join([b64encode(str(i)) for i in self.txset])
             for i in self.txset:
                 self.txset_tree.add(b64encode(i))
 
-            # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            if self.lastHigherBlockHash == '':
-                lastHigherBlockHash = ' '
-            if self.lastLowerBlockHash == '':
-                lastLowerBlockHash = ' '
-            if self.lastHigherBlockHash != '':
-                lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
-            if self.lastLowerBlockHash != '':
-                lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
-            response = self.queue.send_message(
-                MessageBody='rsc_lb',
-                MessageAttributes={
-                    'H': {
-                        'BinaryValue': H,
-                        'DataType': 'Binary'
-                    },
-                    'txset': {
-                        'StringValue': txset_output,
-                        'DataType': 'String'
-                    },
-                    'sig': {
-                        'StringValue': self.sign(H),
-                        'DataType': 'String'
-                    },
-                    'mset': {
-                        'StringValue': mset_output,
-                        'DataType': 'String'
-                    },
-                    'mintette_id': {
-                        'StringValue': self.kid,
-                        'DataType': 'String'
-                    },
-                    'epoch_id': {
-                        'StringValue': str(self.epochId),
-                        'DataType': 'String'
-                    },
-                    'last_hb': {
-                        'StringValue': lastHigherBlockHash,
-                        'DataType': 'String'
-                    },
-                    'last_lb': {
-                        'StringValue': lastLowerBlockHash,
-                        'DataType': 'String'
-                    },
-                    'tree_root': {
-                        'StringValue': b64encode(self.txset_tree.root()),
-                        'DataType': 'String'
-                    }
-                }
-            )
+            lower_block = (H, self.txset, self.sign(H), self.mset, self.kid, self.epochId, self.lastHigherBlockHash, self.lastLowerBlockHash, self.txset_tree.root())
+            queue.put(lower_block)
+
             self.lastLowerBlockHash = H
             self.txCount = 0
             self.txset_tree = Tree()
             self.mset = set()
             self.txset = set()
-
 
         return all_good
 
@@ -614,7 +562,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id, epoch_id, last_hb, last_lb, tree_root = lower_block
+        H_mintette, txset, sig, mset, kid, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
@@ -625,11 +573,16 @@ class Central_Bank:
             return False
 
         # Validate that the hash of the elements in the lower matches the hash value accompanying them
+        if len(mset) == 0:
+            mset_output = ''
+        if len(mset) == 1:
+            mset_output = b64encode(self.mset)
+        if  len(self.mset) > 1:
+            mset_output += " ".join([b64encode(str(i)) for i in self.mset])
         txset_tree = Tree()
-        txset_list = txset.split(" ")
-        for i in txset_list:
+        for i in txset:
             txset_tree.add(i)
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset_output + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
 	    log.msg(b64encode(self.lastHigherBlockHash))
@@ -669,17 +622,10 @@ class Central_Bank:
 
             self.restart_time()
 
-        for message in self.queue.receive_messages(MessageAttributeNames=['All'], MaxNumberOfMessages=10):
-            lower_block = (message.message_attributes.get('H').get('BinaryValue'),
-                                message.message_attributes.get('txset').get('StringValue'),
-                                message.message_attributes.get('sig').get('StringValue'),
-                                message.message_attributes.get('mset').get('StringValue'),
-                                message.message_attributes.get('mintette_id').get('StringValue'),
-                                message.message_attributes.get('epoch_id').get('StringValue'),
-                                message.message_attributes.get('last_hb').get('StringValue'),
-                                message.message_attributes.get('last_lb').get('StringValue'),
-                                message.message_attributes.get('tree_root').get('StringValue'))
-            if self.validate_lower_block(lower_block) == True:
+
+        lower_block = queue.get()
+
+        if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 #self.lower_blocks += lower_block
                 self.period_txset |= set(lower_block[1])
