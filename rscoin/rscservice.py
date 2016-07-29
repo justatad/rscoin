@@ -283,7 +283,7 @@ class RSCFactory(protocol.Factory):
         self.keyID = self.key.id()[:10]
         self.kid = b64encode(self.key.id())
         self.N = N
-        self.txCount = 1
+        self.txCount = 0
         self.txset_tree = Tree()
         self.mset = set()
         self.txset = set()
@@ -458,14 +458,14 @@ class RSCFactory(protocol.Factory):
                 self.txset_tree.add(b64encode(i))
 
             # Need to add hash of prev higher block
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
+            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).hexdigest()
             if len(self.mset) == 0:
                 self.mset = '-'
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
                     'H': {
-                        'StringValue': b64encode(H),
+                        'StringValue': H,
                         'DataType': 'String'
                     },
                     'txset': {
@@ -596,12 +596,12 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id = lower_block
+        H_mintette, txset, sig, mset, mintette_id, epoch_id = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
         key = rscoin.Key(b64decode(sig_elements[0]))
-        all_good &= key.verify(b64decode(H_mintette), b64decode(sig_elements[1]))
+        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
         if not all_good:
             log.msg("Signatue verification failed for lower level block from mintette %s" % mintette_id)
             return False
