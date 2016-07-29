@@ -562,7 +562,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, kid, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root = lower_block
+        H_mintette, txset, sig, mset, mintette_id, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
@@ -577,7 +577,7 @@ class Central_Bank:
             mset_output = ''
         if len(mset) == 1:
             mset_output = b64encode(self.mset)
-        if  len(self.mset) > 1:
+        if  len(mset) > 1:
             mset_output += " ".join([b64encode(str(i)) for i in self.mset])
         txset_tree = Tree()
         for i in txset:
@@ -586,12 +586,12 @@ class Central_Bank:
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
 	    log.msg(b64encode(self.lastHigherBlockHash))
-            log.msg(last_hb)
+            log.msg(lastHigherBlockHash)
             log.msg(b64encode(self.mintette_hashes[mintette_id]))
-            log.msg(last_lb)
+            log.msg(lastLowerBlockHash)
             log.msg(b64encode(txset_tree.root()))
-            log.msg(tree_root)
-            log.msg(epoch_id)
+            log.msg(txset_tree_root)
+            log.msg(epochId)
             return False
 
         return all_good
