@@ -287,8 +287,8 @@ class RSCFactory(protocol.Factory):
         self.txset_tree = Tree()
         self.mset = set()
         self.txset = set()
-        self.lastLowerBlockHash = ' '
-        self.lastHigherBlockHash = ' '
+        self.lastLowerBlockHash = ''
+        self.lastHigherBlockHash = ''
         self.periodStatus = 'Open'
         self.epochId = 0
 
@@ -461,6 +461,12 @@ class RSCFactory(protocol.Factory):
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             if len(self.mset) == 0:
                 self.mset = '-'
+            if self.txCount == 1:
+                self.lastHigherBlockHash = ' '
+                self.lastLowerBlockHash = ' '
+            else:
+                self.lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
+                self.lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
@@ -489,11 +495,11 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'last_hb': {
-                        'StringValue': b64encode(self.lastHigherBlockHash),
+                        'StringValue': self.lastHigherBlockHash,
                         'DataType': 'String'
                     },
                     'last_lb': {
-                        'StringValue': b64encode(self.lastLowerBlockHash),
+                        'StringValue': self.lastLowerBlockHash,
                         'DataType': 'String'
                     },
                     'tree_root': {
@@ -632,6 +638,7 @@ class Central_Bank:
             log.msg(last_lb)
             log.msg(b64encode(txset_tree.root()))
             log.msg(tree_root)
+            log.msg(epoch_id)
             return False
 
         return all_good
