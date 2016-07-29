@@ -487,6 +487,18 @@ class RSCFactory(protocol.Factory):
                     'epoch_id': {
                         'StringValue': str(self.epochId),
                         'DataType': 'String'
+                    },
+                    'last_hb': {
+                        'StringValue': self.lastHigherBlockHash,
+                        'DataType': 'String'
+                    },
+                    'last_lb': {
+                        'StringValue': self.lastLowerBlockHash,
+                        'DataType': 'String'
+                    },
+                    'tree_root': {
+                        'StringValue': self.txset_tree.root(),
+                        'DataType': 'String'
                     }
                 }
             )
@@ -596,7 +608,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id, epoch_id = lower_block
+        H_mintette, txset, sig, mset, mintette_id, epoch_id, last_hb, last_lb, tree_root = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
@@ -614,7 +626,12 @@ class Central_Bank:
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
-	    log.msg(H_mintette)
+	    log.msg(self.lastHigherBlockHash)
+            log.msg(last_hb)
+            log.msg(self.mintette_hashes[mintette_id])
+            log.msg(last_lb)
+            log.msg(txset_tree.root())
+            log.msg(tree_root)
             return False
 
         return all_good
@@ -651,7 +668,10 @@ class Central_Bank:
                                 message.message_attributes.get('sig').get('StringValue'),
                                 message.message_attributes.get('mset').get('StringValue'),
                                 message.message_attributes.get('mintette_id').get('StringValue'),
-                                message.message_attributes.get('epoch_id').get('StringValue'))
+                                message.message_attributes.get('epoch_id').get('StringValue'),
+                                message.message_attributes.get('last_hb').get('StringValue'),
+                                message.message_attributes.get('last_lb').get('StringValue'),
+                                message.message_attributes.get('tree_root').get('StringValue'))
             if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 #self.lower_blocks += lower_block
