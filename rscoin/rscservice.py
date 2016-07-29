@@ -455,7 +455,7 @@ class RSCFactory(protocol.Factory):
 
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             lower_block = (H, self.txset, self.sign(H), self.mset, self.kid, self.epochId, self.lastHigherBlockHash, self.lastLowerBlockHash, self.txset_tree.root())
-            queue.put(lower_block)
+            self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
             self.txCount = 0
@@ -503,8 +503,8 @@ def get_authorities(directory, xID, N = 3):
 class Central_Bank:
 
     def __init__(self, directory):
-        sqs = boto3.resource('sqs')
-        self.queue = sqs.get_queue_by_name(QueueName='rscoin')
+        # Connected to Redis for lower level blocks
+        self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
         self.start_time = time.time()
         self.mintette_hashes = dict()
         self.lastHigherBlockHash = ''
@@ -623,7 +623,7 @@ class Central_Bank:
             self.restart_time()
 
 
-        lower_block = queue.get()
+        lower_block = self.queue.get()
 
         if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
