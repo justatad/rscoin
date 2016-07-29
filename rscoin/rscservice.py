@@ -287,8 +287,8 @@ class RSCFactory(protocol.Factory):
         self.txset_tree = Tree()
         self.mset = set()
         self.txset = set()
-        self.lastLowerBlockHash = ''
-        self.lastHigherBlockHash = ''
+        self.lastLowerBlockHash = ' '
+        self.lastHigherBlockHash = ' '
         self.periodStatus = 'Open'
         self.epochId = 0
 
