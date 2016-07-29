@@ -461,7 +461,7 @@ class RSCFactory(protocol.Factory):
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             if len(self.mset) == 0:
                 self.mset = '-'
-            if self.txCount == 1:
+            if self.epochId == 1:
                 self.lastHigherBlockHash = '-'
                 self.lastLowerBlockHash = '-'
             else:
