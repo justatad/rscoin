@@ -655,8 +655,6 @@ class Central_Bank:
             if self.validate_lower_block(lower_block) == True:
                 log.msg('Lower block valid')
                 #self.lower_blocks += lower_block
-                txset_list = lower_block[1].split(" ")
-                for i in txset_list:
-                    self.period_txset |= set(mainTx.id())
+                self.period_txset |= set(lower_block[1])
                 self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
                 message.delete()
