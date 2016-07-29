@@ -465,8 +465,9 @@ class RSCFactory(protocol.Factory):
                 lastHigherBlockHash = '-'
             if self.lastLowerBlockHash == '':
                 lastLowerBlockHash = '-'
-            else:
+            if self.lastHigherBlockHash != '':
                 lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
+            if self.lastLowerBlockHash != '':
                 lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
