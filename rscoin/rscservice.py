@@ -547,6 +547,8 @@ class RSCfactory(Factory):
 
 class Central_Bank:
 
+    d_end = defer.Deferred()
+
     def __init__(self, directory):
         # Connected to Redis for lower level blocks
         self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
@@ -593,8 +595,8 @@ class Central_Bank:
                     print resp
                     d_end.errback(Exception("Period notification failed."))
                     return
-                print "Period OK"
-                d_end.callback()
+            print "Period OK"
+            d_end.callback()
         except Exception as e:
             d_end.errback(e)
             return
@@ -642,7 +644,7 @@ class Central_Bank:
             log.msg('Period now ending')
             p_msg = "xClosePeriod"
             d = self.broadcast(self.dir, p_msg)
-            d.addCallback(get_period_responses)
+            d.addCallback(self.get_period_responses)
             d.addErrback(d_end.errback)
 
             if len(self.period_txset) != 0:
