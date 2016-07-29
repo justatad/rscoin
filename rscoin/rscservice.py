@@ -459,12 +459,10 @@ class RSCFactory(protocol.Factory):
 
             # Need to add hash of prev higher block
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            if len(self.mset) == 0:
-                self.mset = '-'
             if self.lastHigherBlockHash == '':
-                lastHigherBlockHash = '-'
+                lastHigherBlockHash = ' '
             if self.lastLowerBlockHash == '':
-                lastLowerBlockHash = '-'
+                lastLowerBlockHash = ' '
             if self.lastHigherBlockHash != '':
                 lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
             if self.lastLowerBlockHash != '':
