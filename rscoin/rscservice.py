@@ -489,11 +489,11 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'last_hb': {
-                        'StringValue': self.lastHigherBlockHash,
+                        'StringValue': b64encode(self.lastHigherBlockHash),
                         'DataType': 'String'
                     },
                     'last_lb': {
-                        'StringValue': self.lastLowerBlockHash,
+                        'StringValue': b64encode(self.lastLowerBlockHash),
                         'DataType': 'String'
                     },
                     'tree_root': {
@@ -626,9 +626,9 @@ class Central_Bank:
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
-	    log.msg(self.lastHigherBlockHash)
+	    log.msg(b64encode(self.lastHigherBlockHash))
             log.msg(last_hb)
-            log.msg(self.mintette_hashes[mintette_id])
+            log.msg(b64encode(self.mintette_hashes[mintette_id]))
             log.msg(last_lb)
             log.msg(b64encode(txset_tree.root()))
             log.msg(tree_root)
