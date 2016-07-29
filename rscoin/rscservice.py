@@ -626,8 +626,9 @@ class Central_Bank:
 
         lower_block = self.queue.get()
 
-        if self.validate_lower_block(lower_block) == True:
-                log.msg('Lower block valid')
-                #self.lower_blocks += lower_block
-                self.period_txset |= set(lower_block[1])
-                self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
+        if lower_block != '':
+            if self.validate_lower_block(lower_block) == True:
+                    log.msg('Lower block valid')
+                    #self.lower_blocks += lower_block
+                    self.period_txset |= set(lower_block[1])
+                    self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
