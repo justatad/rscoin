@@ -460,6 +460,7 @@ class RSCFactory(protocol.Factory):
 
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()))
+            log.msg(self.epochId)
             self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
@@ -630,4 +631,3 @@ class Central_Bank:
                 #self.lower_blocks += lower_block
                 self.period_txset |= set(lower_block[1])
                 self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
-                message.delete()
