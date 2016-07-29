@@ -508,6 +508,44 @@ def get_authorities(directory, xID, N = 3):
     return auths
 
 
+class RSCconnection(LineReceiver):
+
+    def __init__(self, f):
+        self.factory = f
+
+    def lineReceived(self, line):
+        self.factory.add_to_buffer(line)
+
+    self.factory.should_close = True
+    self.transport.loseConnection()
+
+    def connectionLost(self, reason):
+        if not self.factory.should_close:
+            self.factory.d.errback(reason)
+
+
+class RSCfactory(Factory):
+
+    def __init__(self):
+        self.should_close = False
+        self.d = defer.Deferred()
+
+    def add_to_buffer(self, line):
+        if not self.d.called:
+            self.d.callback(line)
+
+    def buildProtocol(self, addr):
+        return RSCconnection(self)
+
+    def clientConnectionLost(self, connector, reason):
+        if not self.should_close:
+            self.d.errback(reason)
+
+    def clientConnectionFailed(self, connector, reason):
+        if not self.should_close:
+            self.d.errback(reason)
+
+
 class Central_Bank:
 
     def __init__(self, directory):
@@ -535,11 +573,15 @@ class Central_Bank:
 
         for (kid, ip, port) in small_dir:
             point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=10)
-            f = Factory()
+            f = RSCfactory()
 
             d = point.connect(f)
             d.addCallback(gotProtocol)
+            d.addErrback(f.d.errback)
 
+            d_list += [ f.d ]
+
+        d_all = defer.gatherResults(d_list)
         return d_all
 
 
