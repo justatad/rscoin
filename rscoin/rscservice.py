@@ -462,12 +462,12 @@ class RSCFactory(protocol.Factory):
             if len(self.mset) == 0:
                 self.mset = '-'
             if self.lastHigherBlockHash == '':
-                self.lastHigherBlockHash = '-'
+                lastHigherBlockHash = '-'
             if self.lastLowerBlockHash == '':
-                self.lastLowerBlockHash = '-'
+                lastLowerBlockHash = '-'
             else:
-                self.lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
-                self.lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
+                lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
+                lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
             response = self.queue.send_message(
                 MessageBody='rsc_lb',
                 MessageAttributes={
@@ -496,11 +496,11 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'last_hb': {
-                        'StringValue': self.lastHigherBlockHash,
+                        'StringValue': lastHigherBlockHash,
                         'DataType': 'String'
                     },
                     'last_lb': {
-                        'StringValue': self.lastLowerBlockHash,
+                        'StringValue': lastLowerBlockHash,
                         'DataType': 'String'
                     },
                     'tree_root': {
