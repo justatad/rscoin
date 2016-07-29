@@ -462,8 +462,8 @@ class RSCFactory(protocol.Factory):
             if len(self.mset) == 0:
                 self.mset = '-'
             if self.txCount == 1:
-                self.lastHigherBlockHash = ' '
-                self.lastLowerBlockHash = ' '
+                self.lastHigherBlockHash = '-'
+                self.lastLowerBlockHash = '-'
             else:
                 self.lastHigherBlockHash = b64encode(self.lastHigherBlockHash)
                 self.lastLowerBlockHash = b64encode(self.lastLowerBlockHash)
