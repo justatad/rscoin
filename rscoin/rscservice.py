@@ -497,7 +497,7 @@ class RSCFactory(protocol.Factory):
                         'DataType': 'String'
                     },
                     'tree_root': {
-                        'StringValue': self.txset_tree.root(),
+                        'StringValue': b64encode(self.txset_tree.root()),
                         'DataType': 'String'
                     }
                 }
@@ -630,7 +630,7 @@ class Central_Bank:
             log.msg(last_hb)
             log.msg(self.mintette_hashes[mintette_id])
             log.msg(last_lb)
-            log.msg(txset_tree.root())
+            log.msg(b64encode(txset_tree.root()))
             log.msg(tree_root)
             return False
 
