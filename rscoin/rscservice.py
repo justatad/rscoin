@@ -453,8 +453,13 @@ class RSCFactory(protocol.Factory):
             for i in self.txset:
                 self.txset_tree.add(b64encode(i))
 
+            if len(self.txset) == 1:
+                txset_output = b64encode(self.txset)
+            if len(self.txset) > 1:
+                mset_output += " ".join([b64encode(str(i)) for i in self.txset])
+
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            lower_block = (H, self.txset, self.sign(H), self.mset, self.kid, self.epochId, self.lastHigherBlockHash, self.lastLowerBlockHash, self.txset_tree.root())
+            lower_block = (H, txset_output, self.sign(H), memset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()))
             self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
@@ -573,16 +578,11 @@ class Central_Bank:
             return False
 
         # Validate that the hash of the elements in the lower matches the hash value accompanying them
-        if len(mset) == 0:
-            mset_output = ''
-        if len(mset) == 1:
-            mset_output = b64encode(self.mset)
-        if  len(mset) > 1:
-            mset_output += " ".join([b64encode(str(i)) for i in self.mset])
         txset_tree = Tree()
-        for i in txset:
+        txset_list = txset.split(" ")
+        for i in txset_list:
             txset_tree.add(i)
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset_output + txset_tree.root()).digest()
+        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
 	    log.msg(b64encode(self.lastHigherBlockHash))
