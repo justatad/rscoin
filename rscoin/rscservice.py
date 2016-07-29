@@ -444,8 +444,8 @@ class RSCFactory(protocol.Factory):
         if self.txCount >= 100 and self.periodStatus == 'Open':
             self.epochId += 1
 
-        if len(self.mset) == 0:
-            mset_output = ''
+            if len(self.mset) == 0:
+                mset_output = ''
             if len(self.mset) == 1:
                 mset_output = b64encode(self.mset)
             if  len(self.mset) > 1:
