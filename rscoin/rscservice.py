@@ -213,6 +213,7 @@ class RSCProtocol(LineReceiver):
         """ Process the close period message and respond """
 
         try:
+	    log.msg("Closing period")
             self.factory.periodStatus = 'Closed'
         except:
             self.sendLine("NOTOK")
@@ -227,6 +228,7 @@ class RSCProtocol(LineReceiver):
         """ Process the open period message and respond """
 
         try:
+	    log.msg("Opening new period")
             self.factory.periodStatus = 'Open'
             self.factory.lastHigherBlockHash = items[1]
         except:
@@ -563,6 +565,7 @@ class Central_Bank:
 	self.d_end = defer.Deferred()
 	self.key = rscoin.Key(secret, public=False)
 
+
     def sign(self, H):
         """ Generic signature """
         k = self.key
@@ -593,14 +596,31 @@ class Central_Bank:
         return d_all
 
 
-    def get_period_responses(resp):
+    def get_close_period_responses(resp):
         try:
             assert len(resp) <= 3
             for r in resp:
                 res = unpackage_epoch_response(r)
                 if res[0] != "OK":
                     print resp
-                    self.d_end.errback(Exception("Period notification failed."))
+                    self.d_end.errback(Exception("Period close notification failed."))
+                    return
+
+            print "Period OK"
+            self.d_end.callback()
+        except Exception as e:
+            self.d_end.errback(e)
+            return
+
+
+    def get_open_period_responses(resp):
+        try:
+            assert len(resp) <= 3
+            for r in resp:
+                res = unpackage_epoch_response(r)
+                if res[0] != "OK":
+                    print resp
+                    self.d_end.errback(Exception("Period close notification failed."))
                     return
 
             print "Period OK"
@@ -650,9 +670,8 @@ class Central_Bank:
         if time.time() - self.start_time > 30:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
-            p_msg = "xClosePeriod"
-            d = self.broadcast(self.dir, p_msg)
-            d.addCallback(self.get_period_responses)
+            d = self.broadcast(self.dir, "xClosePeriod")
+            d.addCallback(self.get_close_period_responses)
             d.addErrback(self.d_end.errback)
 
             if len(self.period_txset) != 0:
@@ -664,12 +683,13 @@ class Central_Bank:
 		else:
 		    H = sha256(period_txset_tree.root()).digest()
                 sig = self.sign(H)
-                self.central_bank_chain.multi_add(H, sig)
+		higherblock = (H, sig)
+                self.central_bank_chain.multi_add(higherblock)
 
             log.msg('Opening new period')
             p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
-            d = broadcast(self.dir, p_msg)
-            d.addCallback(get_period_responses)
+            d = self.broadcast(self.dir, p_msg)
+            d.addCallback(self.get_open_period_responses)
             d.addErrback(self.d_end.errback)
 
             self.restart_time()
