@@ -466,7 +466,8 @@ class RSCFactory(protocol.Factory):
             else:
                 mset_len = len(mset_output)
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()), mset_len)
+            H_mset = sha256(mset_output).hexdigest()
+            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()), mset_len, H_mset)
             log.msg(self.epochId)
             self.queue.put(lower_block)
 
@@ -640,7 +641,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root, mset_len = lower_block
+        H_mintette, txset, sig, mset, mintette_id, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root, mset_len, H_mset_mintette = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
@@ -656,10 +657,11 @@ class Central_Bank:
         for i in txset_list:
             txset_tree.add(i)
         H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+        H_mset = sha256(mset).hexdigest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
-            log.msg(len(mset))
-            log.msg(mset_len)
+            log.msg(H_mset_mintette)
+            log.msg(H_mset)
 	    log.msg(b64encode(self.lastHigherBlockHash))
             log.msg(lastHigherBlockHash)
             log.msg(b64encode(self.mintette_hashes[b64encode(mintette_id)]))
