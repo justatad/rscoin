@@ -557,9 +557,10 @@ class Central_Bank:
         self.lastHigherBlockHash = ''
         self.lower_blocks = []
         self.period_txset = set()
-        dir = [(kid, ip, port) for (kid, ip, port) in directory]
-        for (kid, ip, port) in dir:
-            self.mintette_hashes[(b64encode(kid))] = ''
+	mintette_ids = []
+	mintette_ids = [(b64encode(kid)) for (kid, ip, port) in directory]
+	for i in mintette_ids:
+            self.mintette_hashes[i] = ''
         self.dir = [(kid, ip, port) for (kid, ip, port) in directory]
         self.central_bank_chain = DocChain()
 	self.d_end = defer.Deferred()
@@ -656,7 +657,7 @@ class Central_Bank:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
 	    log.msg(b64encode(self.lastHigherBlockHash))
             log.msg(lastHigherBlockHash)
-            log.msg(b64encode(self.mintette_hashes[mintette_id]))
+            log.msg(b64encode(self.mintette_hashes[b64encode(mintette_id)]))
             log.msg(lastLowerBlockHash)
             log.msg(b64encode(txset_tree.root()))
             log.msg(txset_tree_root)
@@ -667,7 +668,7 @@ class Central_Bank:
 
 
     def process_lower_blocks(self):
-        if time.time() - self.start_time > 30:
+        if time.time() - self.start_time > 300:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
             d = self.broadcast(self.dir, "xClosePeriod")
@@ -694,9 +695,7 @@ class Central_Bank:
 
             self.restart_time()
 
-
         lower_block = self.queue.get()
-	log.msg(lower_block)
 
         if lower_block is not None:
             if self.validate_lower_block(lower_block) == True:
@@ -704,3 +703,4 @@ class Central_Bank:
                     #self.lower_blocks += lower_block
                     self.period_txset |= set(lower_block[1])
                     self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
+		    log.msg(b64encode(self.mintette_hashes[(b64encode(lower_block[4]))]))
