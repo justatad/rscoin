@@ -664,7 +664,7 @@ class Central_Bank:
             log.msg(H_mset)
 	    log.msg(b64encode(self.lastHigherBlockHash))
             log.msg(lastHigherBlockHash)
-            log.msg(b64encode(self.mintette_hashes[b64encode(mintette_id)]))
+            log.msg(b64encode(self.mintette_hashes[mintette_id]))
             log.msg(lastLowerBlockHash)
             log.msg(b64encode(txset_tree.root()))
             log.msg(txset_tree_root)
