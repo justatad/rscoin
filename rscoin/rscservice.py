@@ -461,7 +461,10 @@ class RSCFactory(protocol.Factory):
                 txset_output = b64encode(self.txset)
             if len(self.txset) > 1:
                 txset_output += " ".join([b64encode(str(i)) for i in self.txset])
-            mset_len = len(mset_output)
+            if mset_output == '':
+                mset_len = 0
+            else:
+                mset_len = len(mset_output)
             H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()), mset_len)
             log.msg(self.epochId)
