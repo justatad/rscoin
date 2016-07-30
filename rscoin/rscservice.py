@@ -465,7 +465,7 @@ class RSCFactory(protocol.Factory):
                 mset_len = 0
             else:
                 mset_len = len(mset_output)
-            H = sha256(self.lastHigherBlockHash + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
+            H = sha256(b64decode(self.lastHigherBlockHash) + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             H_mset = sha256(mset_output).hexdigest()
             lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()), mset_len, H_mset)
             log.msg(self.epochId)
@@ -656,7 +656,7 @@ class Central_Bank:
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(i)
-        H = sha256(self.lastHigherBlockHash + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+        H = sha256(self.central_bank_chain.root() + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         H_mset = sha256(mset).hexdigest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
@@ -675,7 +675,7 @@ class Central_Bank:
 
 
     def process_lower_blocks(self):
-        if time.time() - self.start_time > 300:
+        if time.time() - self.start_time > 30:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
             d = self.broadcast(self.dir, "xClosePeriod")
@@ -709,5 +709,5 @@ class Central_Bank:
                     log.msg('Lower block valid')
                     #self.lower_blocks += lower_block
                     self.period_txset |= set(lower_block[1])
-                    self.mintette_hashes[(b64encode(lower_block[4]))] = lower_block[0]
-		    log.msg(b64encode(self.mintette_hashes[(b64encode(lower_block[4]))]))
+                    self.mintette_hashes[lower_block[4]] = lower_block[0]
+		    log.msg(b64encode(self.mintette_hashes[lower_block[4]]))
