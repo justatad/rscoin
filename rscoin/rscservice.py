@@ -547,9 +547,7 @@ class RSCfactory(Factory):
 
 class Central_Bank:
 
-    d_end = defer.Deferred()
-
-    def __init__(self, directory):
+    def __init__(self, directory, secret):
         # Connected to Redis for lower level blocks
         self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
         self.start_time = time.time()
@@ -562,6 +560,15 @@ class Central_Bank:
             self.mintette_hashes[(b64encode(kid))] = ''
         self.dir = [(kid, ip, port) for (kid, ip, port) in directory]
         self.central_bank_chain = DocChain()
+	self.d_end = defer.Deferred()
+	self.key = rscoin.Key(secret, public=False)
+
+    def sign(self, H):
+        """ Generic signature """
+        k = self.key
+        pub = k.pub.export(EcPt.POINT_CONVERSION_UNCOMPRESSED)
+        sig = k.sign(H)
+        return " ".join(map(b64encode, [pub, sig]))
 
 
     def broadcast(self, small_dir, data):
@@ -593,13 +600,13 @@ class Central_Bank:
                 res = unpackage_epoch_response(r)
                 if res[0] != "OK":
                     print resp
-                    d_end.errback(Exception("Period notification failed."))
+                    self.d_end.errback(Exception("Period notification failed."))
                     return
 
             print "Period OK"
-            d_end.callback()
+            self.d_end.callback()
         except Exception as e:
-            d_end.errback(e)
+            self.d_end.errback(e)
             return
 
 
@@ -646,13 +653,16 @@ class Central_Bank:
             p_msg = "xClosePeriod"
             d = self.broadcast(self.dir, p_msg)
             d.addCallback(self.get_period_responses)
-            d.addErrback(d_end.errback)
+            d.addErrback(self.d_end.errback)
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
                 for i in self.period_txset:
                     period_txset_tree.add(i)
-                H = sha256(self.central_bank_chain.root() + period_txset_tree.root()).digest()
+		if self.central_bank_chain.root() is not None:
+                    H = sha256(self.central_bank_chain.root() + period_txset_tree.root()).digest()
+		else:
+		    H = sha256(period_txset_tree.root()).digest()
                 sig = self.sign(H)
                 self.central_bank_chain.multi_add(H, sig)
 
@@ -660,7 +670,7 @@ class Central_Bank:
             p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
             d = broadcast(self.dir, p_msg)
             d.addCallback(get_period_responses)
-            d.addErrback(d_end.errback)
+            d.addErrback(self.d_end.errback)
 
             self.restart_time()
 
