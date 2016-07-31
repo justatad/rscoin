@@ -230,7 +230,8 @@ class RSCProtocol(LineReceiver):
         try:
 	    log.msg("Opening new period")
             self.factory.periodStatus = 'Open'
-            self.factory.lastHigherBlockHash = items[1]
+            if len(items) > 1:
+		self.factory.lastHigherBlockHash = items[1]
         except:
             self.sendLine("NOTOK")
             print_exc()
@@ -656,13 +657,16 @@ class Central_Bank:
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(i)
-        H = sha256(self.central_bank_chain.root() + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+	if self.central_bank_chain.root() is not None:
+            H = sha256(self.central_bank_chain.root() + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
+	else:
+	    H = sha256(self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         H_mset = sha256(mset).hexdigest()
         if H_mintette != H:
             log.msg("Lower block hash not valid from mintette %s" % mintette_id)
             log.msg(H_mset_mintette)
             log.msg(H_mset)
-	    log.msg(b64encode(self.lastHigherBlockHash))
+	    log.msg(b64encode(self.central_bank_chain.root()))
             log.msg(lastHigherBlockHash)
             log.msg(b64encode(self.mintette_hashes[mintette_id]))
             log.msg(lastLowerBlockHash)
@@ -695,7 +699,10 @@ class Central_Bank:
                 self.central_bank_chain.multi_add(higherblock)
 
             log.msg('Opening new period')
-            p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
+	    if self.central_bank_chain.root() is not None:
+            	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
+	    else:
+		p_msg = "xOpenPeriod"
             d = self.broadcast(self.dir, p_msg)
             d.addCallback(self.get_open_period_responses)
             d.addErrback(self.d_end.errback)
