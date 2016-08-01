@@ -443,9 +443,9 @@ class RSCFactory(protocol.Factory):
 
         # Store information used to generate the lower level block for this mintette
         self.txCount += 1
-        if len(otherTx) >= 1:
-            self.mset |= set(otherTx)
-        self.txset |= set(mainTx.id())
+        #if len(otherTx) >= 1:
+        #    self.mset |= set(otherTx)
+        #self.txset |= set(mainTx.id())
 
         # Check to see if enough transactions have been received and close the epoch if they have
         if self.txCount >= 10000000 and self.periodStatus == 'Open':
