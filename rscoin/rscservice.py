@@ -264,6 +264,7 @@ class RSCProtocol(LineReceiver):
         self.return_Err("UnknownCommand:%s" % items[0])
         return
 
+
     def sign(self, H):
         """ Generic signature """
         k = self.factory.key
@@ -378,6 +379,7 @@ class RSCFactory(protocol.Factory):
             self.log.sync()
         return True
 
+
     def process_TxCommit(self, data):
         """ Provides a Tx and a list of responses, and commits the transaction. """
         H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig = data
@@ -446,7 +448,7 @@ class RSCFactory(protocol.Factory):
         self.txset |= set(mainTx.id())
 
         # Check to see if enough transactions have been received and close the epoch if they have
-        if self.txCount >= 500 and self.periodStatus == 'Open':
+        if self.txCount >= 1000 and self.periodStatus == 'Open':
             self.epochId += 1
 
             if len(self.mset) == 0:
