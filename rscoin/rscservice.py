@@ -685,7 +685,7 @@ class Central_Bank:
 
 
     def process_lower_blocks(self):
-        if time.time() - self.start_time > 30:
+        if time.time() - self.start_time > 15:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
             d = self.broadcast(self.dir, "xClosePeriod")
@@ -693,11 +693,14 @@ class Central_Bank:
             d.addErrback(self.d_end.errback)
 
             # Now grab any remaining messages off the queue
-            lower_block = ''
-            while lower_block is not None:
+            queue_empty = False
+            while queue_empty is not True:
                 lower_block = self.queue.get()
-                if self.validate_lower_block(lower_block) == True:
-                    log.msg('Lower block valid')
+		if lower_block is not None:
+               	    if self.validate_lower_block(lower_block) == True:
+                    	log.msg('Lower block valid')
+		else:
+		    queue_empty = True
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
@@ -726,4 +729,4 @@ class Central_Bank:
 
         if lower_block is not None:
             if self.validate_lower_block(lower_block) == True:
-                    log.msg('Lower block valid')
+            	log.msg('Lower block valid')
