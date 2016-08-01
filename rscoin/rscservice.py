@@ -677,6 +677,10 @@ class Central_Bank:
             log.msg(epochId)
             return False
 
+        if all_good is True:
+            self.period_txset |= set(txset)
+            self.mintette_hashes[mintette_id] = H_mintette
+
         return all_good
 
 
@@ -687,6 +691,13 @@ class Central_Bank:
             d = self.broadcast(self.dir, "xClosePeriod")
             d.addCallback(self.get_close_period_responses)
             d.addErrback(self.d_end.errback)
+
+            # Now grab any remaining messages off the queue
+            lower_block = ''
+            while lower_block is not None:
+                lower_block = self.queue.get()
+                if self.validate_lower_block(lower_block) == True:
+                    log.msg('Lower block valid')
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
@@ -716,5 +727,3 @@ class Central_Bank:
         if lower_block is not None:
             if self.validate_lower_block(lower_block) == True:
                     log.msg('Lower block valid')
-                    self.period_txset |= set(lower_block[1])
-                    self.mintette_hashes[lower_block[4]] = lower_block[0]
