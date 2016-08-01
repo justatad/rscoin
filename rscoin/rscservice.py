@@ -572,6 +572,7 @@ class Central_Bank:
         self.central_bank_chain = DocChain()
 	self.d_end = defer.Deferred()
 	self.key = rscoin.Key(secret, public=False)
+        self.period_txns = []
 
 
     def sign(self, H):
@@ -678,7 +679,8 @@ class Central_Bank:
             return False
 
         if all_good is True:
-            self.period_txset |= set(txset)
+            #self.period_txset |= set(txset)
+            self.period_txns += txset
             self.mintette_hashes[mintette_id] = H_mintette
 
         return all_good
@@ -701,6 +703,9 @@ class Central_Bank:
                     	log.msg('Lower block valid')
 		else:
 		    queue_empty = True
+
+            txcount = Counter(self.period_txns)
+            log.msg(txcount)
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
