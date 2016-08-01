@@ -446,7 +446,7 @@ class RSCFactory(protocol.Factory):
         self.txset |= set(mainTx.id())
 
         # Check to see if enough transactions have been received and close the epoch if they have
-        if self.txCount >= 100 and self.periodStatus == 'Open':
+        if self.txCount >= 200 and self.periodStatus == 'Open':
             self.epochId += 1
 
             if len(self.mset) == 0:
@@ -714,7 +714,5 @@ class Central_Bank:
         if lower_block is not None:
             if self.validate_lower_block(lower_block) == True:
                     log.msg('Lower block valid')
-                    #self.lower_blocks += lower_block
                     self.period_txset |= set(lower_block[1])
                     self.mintette_hashes[lower_block[4]] = lower_block[0]
-		    log.msg(b64encode(self.mintette_hashes[lower_block[4]]))

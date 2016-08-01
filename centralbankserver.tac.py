@@ -11,5 +11,5 @@ secret = file("secret.key").read()
 this_bank = Central_Bank(directory["directory"], secret)
 
 application = service.Application("rscoin")
-ts = TimerService(1, this_bank.process_lower_blocks)
+ts = TimerService(0.1, this_bank.process_lower_blocks)
 ts.setServiceParent(application)
