@@ -699,7 +699,6 @@ class Central_Bank:
 		    queue_empty = True
 
             txcount = collections.Counter(self.period_txns)
-            log.msg(txcount)
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
@@ -722,7 +721,7 @@ class Central_Bank:
             d.addCallback(self.get_open_period_responses)
             d.addErrback(self.d_end.errback)
 
-            self.period_txns = set()
+            self.period_txns = []
             self.restart_time()
 
         lower_block = self.queue.get()
