@@ -563,9 +563,6 @@ class Central_Bank:
         self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
         self.start_time = time.time()
         self.mintette_hashes = dict()
-        self.lastHigherBlockHash = ''
-        self.lower_blocks = []
-        self.period_txset = set()
 	mintette_ids = []
 	mintette_ids = [(b64encode(kid)) for (kid, ip, port) in directory]
 	for i in mintette_ids:
@@ -674,7 +671,6 @@ class Central_Bank:
             return False
 
         if all_good is True:
-            #self.period_txset |= set(txset)
             self.period_txns.extend(txset_list)
             self.mintette_hashes[mintette_id] = H_mintette
 
@@ -703,18 +699,18 @@ class Central_Bank:
 	    for i in list(txcount):
 		if txcount[i] < self.majority:
 		    del txcount[i]
-	    log.msg(txcount)
+            txset_period = set(txcount.elements())
 
-            if len(self.period_txset) != 0:
+            if len(txset_period) != 0:
                 period_txset_tree = Tree()
-                for i in self.period_txset:
+                for i in txset_period:
                     period_txset_tree.add(i)
 		if self.central_bank_chain.root() is not None:
                     H = sha256(self.central_bank_chain.root() + period_txset_tree.root()).digest()
 		else:
 		    H = sha256(period_txset_tree.root()).digest()
                 sig = self.sign(H)
-		higherblock = (H, sig)
+		higherblock = (H, txset_period, sig)
                 self.central_bank_chain.multi_add(higherblock)
 
             log.msg('Opening new period')
