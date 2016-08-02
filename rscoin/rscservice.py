@@ -699,9 +699,11 @@ class Central_Bank:
 		else:
 		    queue_empty = True
 
-            log.msg(self.majority)
             txcount = Counter(self.period_txns)
-            log.msg(Counter(el for el in txcount.elements() if txcount[el] > self.majority))
+	    for i in list(txcount):
+		if txcount[i] < self.majority:
+		    del txcount[i]
+	    log.msg(txcount)
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
