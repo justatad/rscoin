@@ -26,6 +26,8 @@ from hotqueue import HotQueue
 
 import time
 
+import collections
+
 import rscoin
 
 def load_setup(setup_data):
@@ -680,7 +682,7 @@ class Central_Bank:
 
         if all_good is True:
             #self.period_txset |= set(txset)
-            self.period_txns += txset
+            self.period_txns += txset_list
             self.mintette_hashes[mintette_id] = H_mintette
 
         return all_good
@@ -704,7 +706,7 @@ class Central_Bank:
 		else:
 		    queue_empty = True
 
-            txcount = Counter(self.period_txns)
+            txcount = collections.Counter(self.period_txns)
             log.msg(txcount)
 
             if len(self.period_txset) != 0:
