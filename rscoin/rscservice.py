@@ -447,8 +447,7 @@ class RSCFactory(protocol.Factory):
         self.txCount += 1
         if len(otherTx) >= 1:
             self.mset |= set(otherTx)
-        self.txset |= set(mid)
-        log.msg(b64encode(mid))
+        self.txset |= set(b64encode(mid))
 
         # Check to see if enough transactions have been received and close the epoch if they have
         if self.txCount >= 1000 and self.periodStatus == 'Open':
@@ -461,12 +460,13 @@ class RSCFactory(protocol.Factory):
             if  len(self.mset) > 1:
                 mset_output += " ".join([b64encode(str(i)) for i in self.mset])
             for i in self.txset:
-                self.txset_tree.add(b64encode(i))
+                self.txset_tree.add(i)
 
             if len(self.txset) == 1:
-                txset_output = b64encode(self.txset)
+                txset_output = self.txset
             if len(self.txset) > 1:
-                txset_output += " ".join([b64encode(str(i)) for i in self.txset])
+                txset_output += " ".join([str(i) for i in self.txset])
+                log.msg(txset_output)
             if mset_output == '':
                 mset_len = 0
             else:
