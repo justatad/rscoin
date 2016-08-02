@@ -575,6 +575,7 @@ class Central_Bank:
 	self.d_end = defer.Deferred()
 	self.key = rscoin.Key(secret, public=False)
         self.period_txns = []
+        self.majority = int(len(self.dir) / 2)
 
 
     def sign(self, H):
@@ -698,7 +699,9 @@ class Central_Bank:
 		else:
 		    queue_empty = True
 
+            log.msg(self.majority)
             txcount = collections.Counter(self.period_txns)
+            log.msg(Counter(el for el in txcount.elements() if txcount[el] > self.majority))
 
             if len(self.period_txset) != 0:
                 period_txset_tree = Tree()
