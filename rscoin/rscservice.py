@@ -720,7 +720,7 @@ class Central_Bank:
 		higherblock = (H, txset_period_string, sig)
                 self.central_bank_chain.multi_add(higherblock)
             t1 = default_timer()
-            log.msg("Block Generation Times: %e %e %e" % ((t1 - t0), t0, t1))
+            log.msg("Block Generation Times: %f %f %f" % ((t1 - t0), t0, t1))
 	    if self.central_bank_chain.root() is not None:
             	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
 	    else:
