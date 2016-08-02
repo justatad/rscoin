@@ -448,7 +448,7 @@ class RSCFactory(protocol.Factory):
         if len(otherTx) >= 1:
             self.mset |= set(otherTx)
         self.txset |= set(mid)
-        log.msg(mid)
+        log.msg(b64encode(mid))
 
         # Check to see if enough transactions have been received and close the epoch if they have
         if self.txCount >= 1000 and self.periodStatus == 'Open':
