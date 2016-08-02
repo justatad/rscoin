@@ -19,6 +19,7 @@ from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Factory, Protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
+from twisted.logger import Logger
 
 from hippiehug import DocChain, Tree
 
