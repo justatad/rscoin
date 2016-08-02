@@ -674,7 +674,7 @@ class Central_Bank:
 
         if all_good is True:
             #self.period_txset |= set(txset)
-            self.period_txns += txset_list
+            self.period_txns.extend(txset_list)
             self.mintette_hashes[mintette_id] = H_mintette
 
         return all_good
