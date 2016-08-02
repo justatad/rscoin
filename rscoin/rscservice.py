@@ -471,9 +471,7 @@ class RSCFactory(protocol.Factory):
             else:
                 mset_len = len(mset_output)
             H = sha256(b64decode(self.lastHigherBlockHash) + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            H_mset = sha256(mset_output).hexdigest()
-            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid, self.epochId, b64encode(self.lastHigherBlockHash), b64encode(self.lastLowerBlockHash), b64encode(self.txset_tree.root()), mset_len, H_mset)
-            log.msg(self.epochId)
+            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid)
             self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
@@ -557,6 +555,8 @@ class RSCfactory(Factory):
 
 
 class Central_Bank:
+
+    cb_log = Logger()
 
     def __init__(self, directory, secret):
         # Connected to Redis for lower level blocks
@@ -645,7 +645,7 @@ class Central_Bank:
 
     def validate_lower_block(self, lower_block):
         all_good = True
-        H_mintette, txset, sig, mset, mintette_id, epochId, lastHigherBlockHash, lastLowerBlockHash, txset_tree_root, mset_len, H_mset_mintette = lower_block
+        H_mintette, txset, sig, mset, mintette_id = lower_block
 
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
@@ -681,9 +681,8 @@ class Central_Bank:
 
 	txset_period_string = ''
 
-        if time.time() - self.start_time > 15:
+        if time.time() - self.start_time > 30:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
-            log.msg('Period now ending')
             d = self.broadcast(self.dir, "xClosePeriod")
             d.addCallback(self.get_close_period_responses)
             d.addErrback(self.d_end.errback)
@@ -697,7 +696,7 @@ class Central_Bank:
                     	log.msg('Lower block valid')
 		else:
 		    queue_empty = True
-
+            t0 = default_timer()
             txcount = Counter(self.period_txns)
 	    for i in list(txcount):
 		if txcount[i] < self.majority:
@@ -717,11 +716,12 @@ class Central_Bank:
 	   	if len(txset_period) == 1:
 		    txset_period_string = txset_period
 		if len(txset_period) > 1:
-		    txset_period_string += " ".join([i for i in txset_period]) 
+		    txset_period_string += " ".join([i for i in txset_period])
 
 		higherblock = (H, txset_period_string, sig)
                 self.central_bank_chain.multi_add(higherblock)
-
+            t1 = default_timer()
+            self.cb_log.info(t1 - t0, t0, t1)
             log.msg('Opening new period')
 	    if self.central_bank_chain.root() is not None:
             	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
