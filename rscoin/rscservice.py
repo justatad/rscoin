@@ -19,7 +19,6 @@ from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Factory, Protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
-from twisted.logger import Logger
 
 from hippiehug import DocChain, Tree
 
@@ -557,8 +556,6 @@ class RSCfactory(Factory):
 
 class Central_Bank:
 
-    cb_log = Logger()
-
     def __init__(self, directory, secret):
         # Connected to Redis for lower level blocks
         self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
@@ -653,7 +650,7 @@ class Central_Bank:
         key = rscoin.Key(b64decode(sig_elements[0]))
         all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
         if not all_good:
-            log.msg("Signatue verification failed for lower level block from mintette %s" % mintette_id)
+            log.err("Signatue verification failed for lower level block from mintette %s" % mintette_id)
             return False
 
         # Validate that the hash of the elements in the lower matches the hash value accompanying them
@@ -667,7 +664,7 @@ class Central_Bank:
 	    H = sha256(self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
         H_mset = sha256(mset).hexdigest()
         if H_mintette != H:
-            log.msg("Lower block hash not valid from mintette %s" % mintette_id)
+            log.err("Lower block hash not valid from mintette %s" % mintette_id)
             all_good = False
             return False
 
@@ -693,8 +690,7 @@ class Central_Bank:
             while queue_empty is not True:
                 lower_block = self.queue.get()
 		if lower_block is not None:
-               	    if self.validate_lower_block(lower_block) == True:
-                    	log.msg('Lower block valid')
+               	    self.validate_lower_block(lower_block)
 		else:
 		    queue_empty = True
             t0 = default_timer()
@@ -722,8 +718,7 @@ class Central_Bank:
 		higherblock = (H, txset_period_string, sig)
                 self.central_bank_chain.multi_add(higherblock)
             t1 = default_timer()
-            self.cb_log.info(t1 - t0, t0, t1)
-            log.msg('Opening new period')
+            log.msg(t1 - t0, t0, t1)
 	    if self.central_bank_chain.root() is not None:
             	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
 	    else:
@@ -738,5 +733,4 @@ class Central_Bank:
         lower_block = self.queue.get()
 
         if lower_block is not None:
-            if self.validate_lower_block(lower_block) == True:
-            	log.msg('Lower block valid')
+            self.validate_lower_block(lower_block)
