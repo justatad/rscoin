@@ -465,7 +465,7 @@ class RSCFactory(protocol.Factory):
             if len(self.txset) == 1:
                 txset_output = self.txset
             if len(self.txset) > 1:
-                txset_output += " ".join([str(i) for i in self.txset])
+                txset_output += " ".join([i for i in self.txset])
                 log.msg(txset_output)
             if mset_output == '':
                 mset_len = 0
