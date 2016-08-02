@@ -730,6 +730,7 @@ class Central_Bank:
             d.addCallback(self.get_open_period_responses)
             d.addErrback(self.d_end.errback)
 
+            self.period_txns = set()
             self.restart_time()
 
         lower_block = self.queue.get()
