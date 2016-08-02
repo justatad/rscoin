@@ -678,6 +678,9 @@ class Central_Bank:
 
 
     def process_lower_blocks(self):
+
+	txset_period_string = ''
+
         if time.time() - self.start_time > 15:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             log.msg('Period now ending')
@@ -710,7 +713,13 @@ class Central_Bank:
 		else:
 		    H = sha256(period_txset_tree.root()).digest()
                 sig = self.sign(H)
-		higherblock = (H, txset_period, sig)
+
+	   	if len(txset_period) == 1:
+		    txset_period_string = txset_period
+		if len(txset_period) > 1:
+		    txset_period_string += " ".join([i for i in txset_period]) 
+
+		higherblock = (H, txset_period_string, sig)
                 self.central_bank_chain.multi_add(higherblock)
 
             log.msg('Opening new period')
