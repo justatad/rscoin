@@ -69,7 +69,7 @@ class ActiveTx():
     def __init__(self, fname, keys):
         self.fname = fname
         self.keys = keys
-        
+
         try:
             self.Tx = load(file(self.fname, "rb"))
         except:
@@ -124,7 +124,7 @@ def broadcast(small_dir, data):
 
     for (kid, ip, port) in small_dir:
         _stats[ip] += 1
-        point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=10)
+        point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=30)
         f = RSCfactory()
 
         d = point.connect(f)
@@ -159,14 +159,14 @@ def play(core, directory):
 
     Cauths_L = get_authorities(directory, tx.id(), N=3)
     Cauths = set(Cauths_L)
-    
+
     assert len(Cauths) == len(Cauths_L)
     assert len(Cauths) <= 3
 
     Csmall_dir = [(kid, ip, port) for (kid, ip, port) in directory if kid in Cauths]
-    
+
     assert len(Csmall_dir) <= 3
-    
+
     d_end = defer.Deferred()
 
     def get_commit_responses(resp):
@@ -179,7 +179,7 @@ def play(core, directory):
                     d_end.errback(Exception("Commit failed."))
                     return
             t1 = default_timer()
-            # print 
+            # print
             print "Commit OK", t1 - t0, t0, t1
             d_end.callback(t1 - t0)
         except Exception as e:
@@ -229,7 +229,7 @@ def play(core, directory):
 
 import socket
 
-def main():    
+def main():
     dir_data = load_setup(file("directory.conf").read())
     # directory = dir_data["directory"]
 
@@ -242,7 +242,7 @@ def main():
     parser.add_argument('--dir', action='store_true', help='List mintettes.')
     parser.add_argument('--mock', action='store_true', help='Do not connect to the network.')
     parser.add_argument('--balances', action='store_true', help='List balances of all addresses.')
-    
+
 
     parser.add_argument('--issue', nargs=2, metavar=("VALUE", "ADDRESS"), help='Issue a coin to an address.')
     parser.add_argument('--pay', nargs=3, metavar=("VALUE", "ADDRESS", "CHANGEADDRESS"),  help='Pay and address some amount, and return change')
@@ -254,8 +254,8 @@ def main():
     parser.add_argument('--play', nargs=1, metavar="FILE", help='Play a set of transaction cores.')
 
     parser.add_argument('--conn', default=20, type=int, metavar="CONNECTIONS", help='Number of simultaneaous connections.')
-    
-    
+
+
     args = parser.parse_args()
 
     if args.dir:
@@ -267,10 +267,10 @@ def main():
         active = ActiveTx("activetx.log", keys)
         for (k, v) in active.balances().iteritems():
             print "%s\t%s RSC" % (k, v)
-        
+
     elif args.listaddress:
         keys = load_keys()
-        
+
         for k in keys:
             if k[0] == "#":
                 print "%s\t%s (%s)" % (k, keys[k][2], keys[k][1])
@@ -280,7 +280,7 @@ def main():
         k_sec = rscoin.Key(sec_str, public=False)
         k_pub = k_sec.pub.export()
         k_id = k_sec.id()
-        
+
         f = file("keychain.txt", "a")
         data = "#%s sec %s %s" % (args.newaddress[0], b64encode(k_id), b64encode(sec_str))
         print data
@@ -304,7 +304,7 @@ def main():
 
         def play_another_song(var):
             if var is not None and (not isinstance(var, float) or not isinstance(var, float)):
-                print "ERROR", var                
+                print "ERROR", var
 
             if cores != []:
                 c = cores.pop()
@@ -321,14 +321,14 @@ def main():
                 threads.pop()
                 if threads == []:
                     reactor.stop()
-        
+
         for _ in threads:
             play_another_song(None)
 
         t0 = default_timer()
         reactor.run()
         t1 = default_timer()
-        
+
         print "Overall time: %s" % (t1 - t0)
         for (ip, v) in sorted(_stats.iteritems()):
             print "Stats: %s %s" % (ip, v)
@@ -337,14 +337,14 @@ def main():
 
         (val, dest_addr, change_addr) = args.pay
         val = int(val)
-        assert isinstance(val, int) and 0 < val 
+        assert isinstance(val, int) and 0 < val
 
         keys = load_keys()
         dest_addr = b64decode(keys["#"+dest_addr][2])
         change_addr = b64decode(keys["#"+change_addr][2])
 
         active = ActiveTx("activetx.log", keys)
-        
+
         print val
         xval, txs = active.get_value(int(val))
         assert len(txs) > 0
@@ -352,7 +352,7 @@ def main():
         if val <= xval:
             # build the transactions
             inTx = []
-            outTx = [ rscoin.OutputTx(dest_addr, val) ] 
+            outTx = [ rscoin.OutputTx(dest_addr, val) ]
             if xval - val > 0:
                 outTx += [ rscoin.OutputTx(change_addr, xval - val) ]
 
@@ -362,10 +362,10 @@ def main():
                 inTx_list += [ rscoin.Tx.parse(active.Tx[(tx_id, i, key_id, value)]) ]
                 keys_list += [ rscoin.Key(b64decode(keys[key_id][3]), False) ]
                 inTx += [ rscoin.InputTx(tx_id, i) ]
-            
+
             newtx = rscoin.Tx(inTx, outTx)
             newtx_ser = newtx.serialize()
-            
+
             ## Now we sign and remove from the list
             active.add(newtx_ser)
             for k in txs:
@@ -379,7 +379,7 @@ def main():
 
             d = play(core, directory)
             d.addBoth(r_stop)
-            
+
             reactor.run()
 
         else:
@@ -387,7 +387,7 @@ def main():
 
 
     elif args.issue:
-    
+
         # Parse the basic files.
         secret = file("secret.key").read()
         mykey = rscoin.Key(secret, public=False)
@@ -396,7 +396,7 @@ def main():
         assert special_id == mykey.id()
 
         [value_str, key_name] = args.issue
-        
+
         keys = load_keys()
         key_id = b64decode(keys["#"+key_name][2])
 
@@ -421,17 +421,17 @@ def main():
 
             def r_process(results):
                 for msg in results:
-                    parsed = unpackage_commit_response(msg) 
+                    parsed = unpackage_commit_response(msg)
                     if parsed[0] != "OK":
                         raise Exception("Response not OK.")
 
                     pub, sig = parsed[1:]
                     kx = rscoin.Key(pub)
-                        
+
                     if not (kx.verify(tx.id(), sig) and kx.id() in auths):
                         raise Exception("Invalid Signature.")
 
-                    auths.remove( kx.id() )         
+                    auths.remove( kx.id() )
 
                 active = ActiveTx("activetx.log", keys)
                 active.add(tx_ser)
