@@ -573,6 +573,7 @@ class Central_Bank:
 	self.key = rscoin.Key(secret, public=False)
         self.period_txns = []
         self.majority = int(len(self.dir) / 2) + 1
+        self.lb_count = 0
 
 
     def sign(self, H):
@@ -673,6 +674,7 @@ class Central_Bank:
         if all_good is True:
             self.period_txns.extend(txset_list)
             self.mintette_hashes[mintette_id] = H_mintette
+            self.lb_count += 1
 
         return all_good
 
@@ -720,7 +722,7 @@ class Central_Bank:
 		higherblock = (H, txset_period_string, sig)
                 self.central_bank_chain.multi_add(higherblock)
             t1 = default_timer()
-            log.msg("Block Generation Times: %f %f %f" % ((t1 - t0), t0, t1))
+            log.msg("Block Generation Time: %d %f %f %f" % (self.lb_count, (t1 - t0), t0, t1))
 	    if self.central_bank_chain.root() is not None:
             	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
 	    else:
@@ -730,6 +732,7 @@ class Central_Bank:
             d.addErrback(self.d_end.errback)
 
             self.period_txns = []
+            self.lb_count = 0
             self.restart_time()
 
         lower_block = self.queue.get()
