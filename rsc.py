@@ -124,7 +124,7 @@ def broadcast(small_dir, data):
 
     for (kid, ip, port) in small_dir:
         _stats[ip] += 1
-        point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=30)
+        point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=45)
         f = RSCfactory()
 
         d = point.connect(f)
