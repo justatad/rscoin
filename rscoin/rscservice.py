@@ -683,7 +683,7 @@ class Central_Bank:
 
 	txset_period_string = ''
 
-        if time.time() - self.start_time > 30:
+        if time.time() - self.start_time > 60:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             d = self.broadcast(self.dir, "xClosePeriod")
             d.addCallback(self.get_close_period_responses)
