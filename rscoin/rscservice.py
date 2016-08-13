@@ -303,7 +303,7 @@ class RSCFactory(protocol.Factory):
         self.epochId = 0
 
         # Connect to Redis
-        self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
+        #self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
 
         # Open the databases
         self.dbname = 'keys-%s' % hexlify(self.keyID)
@@ -474,7 +474,7 @@ class RSCFactory(protocol.Factory):
                 mset_len = len(mset_output)
             H = sha256(b64decode(self.lastHigherBlockHash) + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
             lower_block = (H, txset_output, self.sign(H), mset_output, self.kid)
-            self.queue.put(lower_block)
+            #self.queue.put(lower_block)
 
             self.lastLowerBlockHash = H
             self.txCount = 0
