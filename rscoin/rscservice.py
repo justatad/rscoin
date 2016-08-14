@@ -14,21 +14,9 @@ from os.path import join
 
 from petlib.ec import EcPt
 
-from twisted.internet import protocol, reactor, defer
-from twisted.internet.endpoints import TCP4ClientEndpoint
-from twisted.internet.protocol import Factory, Protocol
+from twisted.internet import protocol
 from twisted.protocols.basic import LineReceiver
 from twisted.python import log
-
-from hippiehug import DocChain, Tree
-
-from hotqueue import HotQueue
-
-import time
-
-from collections import Counter
-
-from timeit import default_timer
 
 import rscoin
 
@@ -92,16 +80,6 @@ def unpackage_commit_response(response):
 
     code = resp[0]
     if code == "OK" or code == "Pong":
-        resp[1:] = map(b64decode, resp[1:])
-
-    return resp
-
-
-def unpackage_period_response(response):
-    resp = response.strip().split(" ")
-
-    code = resp[0]
-    if code == "OK":
         resp[1:] = map(b64decode, resp[1:])
 
     return resp
@@ -213,38 +191,6 @@ class RSCProtocol(LineReceiver):
         self.sendLine("OK %s" % ret)
 
 
-    def handle_ClosePeriod(self):
-        """ Process the close period message and respond """
-
-        try:
-	    log.msg("Closing period")
-            self.factory.periodStatus = 'Closed'
-        except:
-            self.sendLine("NOTOK")
-            print_exc()
-            self.return_Err("PeriodCloseError")
-            return
-
-        self.sendLine("OK")
-
-
-    def handle_OpenPeriod(self, items):
-        """ Process the open period message and respond """
-
-        try:
-	    log.msg("Opening new period")
-            self.factory.periodStatus = 'Open'
-            if len(items) > 1:
-		self.factory.lastHigherBlockHash = items[1]
-        except:
-            self.sendLine("NOTOK")
-            print_exc()
-            self.return_Err("PeriodOpenError")
-            return
-
-        self.sendLine("OK")
-
-
     def lineReceived(self, line):
         """ Simple de-multiplexer """
 
@@ -259,15 +205,8 @@ class RSCProtocol(LineReceiver):
             self.sendLine("Pong %s" % b64encode(self.factory.key.id()))
             return # self.handle_Commit(items) # Seal a transaction
 
-        if items[0] == "xClosePeriod":
-            return self.handle_ClosePeriod() # Close period on mintette
-
-        if items[0] == "xOpenPeriod":
-            return self.handle_OpenPeriod(items) # Open new period on mintette
-
         self.return_Err("UnknownCommand:%s" % items[0])
         return
-
 
     def sign(self, H):
         """ Generic signature """
@@ -290,24 +229,13 @@ class RSCFactory(protocol.Factory):
         self.special_key = special_key
         self.key = rscoin.Key(secret, public=False)
         self.directory = sorted(directory)
-        self.keyID = self.key.id()[:10]
-        self.kid = b64encode(self.key.id())
+        keyID = self.key.id()[:10]
         self.N = N
-        self.txCount = 0
-        self.txset_tree = Tree()
-        self.mset = set()
-        self.txset = set()
-        self.lastLowerBlockHash = ''
-        self.lastHigherBlockHash = ''
-        self.periodStatus = 'Open'
-        self.epochId = 0
-
-        # Connect to Redis
-        self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
+        self.cTxFile = 'commits-%s' % hexlify(keyID)
 
         # Open the databases
-        self.dbname = 'keys-%s' % hexlify(self.keyID)
-        self.logname = 'log-%s' % hexlify(self.keyID)
+        self.dbname = 'keys-%s' % hexlify(keyID)
+        self.logname = 'log-%s' % hexlify(keyID)
 
         if conf_dir:
             self.dbname = join(conf_dir, self.dbname)
@@ -383,12 +311,9 @@ class RSCFactory(protocol.Factory):
             self.log.sync()
         return True
 
-
     def process_TxCommit(self, data):
         """ Provides a Tx and a list of responses, and commits the transaction. """
         H, mainTx, otherTx, keys, sigs, auth_pub, auth_sig = data
-        mset_output = ''
-        txset_output = ''
 
         # Check that this Tx is handled by this server
         ik = mainTx.id()
@@ -438,6 +363,13 @@ class RSCFactory(protocol.Factory):
             log.msg('Failed Tx Doublespending')
             return False
 
+        ## TODO: Log all information about the transaction
+
+        # Now write the transaction to disk
+        #f = open(self.cTxFile, 'a')
+        #print >>f, join(data)
+        #f.close()
+
         # Update the outTx entries
         for k, v in mainTx.get_utxo_out_entries():
             self.db[k] = v
@@ -445,57 +377,12 @@ class RSCFactory(protocol.Factory):
         if RSCFactory._sync:
             self.db.sync()
 
-        # Store information used to generate the lower level block for this mintette
-        self.txCount += 1
-        if len(otherTx) >= 1:
-            self.mset |= set(otherTx)
-        self.txset.add(b64encode(mid))
-
-        # Check to see if enough transactions have been received and close the epoch if they have
-        if self.txCount >= 1000 and self.periodStatus == 'Open':
-            self.epochId += 1
-
-            if len(self.mset) == 0:
-                mset_output = ''
-            if len(self.mset) == 1:
-                mset_output = b64encode(self.mset)
-            if  len(self.mset) > 1:
-                mset_output += " ".join([b64encode(str(i)) for i in self.mset])
-            for i in self.txset:
-                self.txset_tree.add(i)
-
-            if len(self.txset) == 1:
-                txset_output = self.txset
-            if len(self.txset) > 1:
-                txset_output += " ".join([i for i in self.txset])
-            if mset_output == '':
-                mset_len = 0
-            else:
-                mset_len = len(mset_output)
-            H = sha256(b64decode(self.lastHigherBlockHash) + self.lastLowerBlockHash + mset_output + self.txset_tree.root()).digest()
-            lower_block = (H, txset_output, self.sign(H), mset_output, self.kid)
-            self.queue.put(lower_block)
-
-            self.lastLowerBlockHash = H
-            self.txCount = 0
-            self.txset_tree = Tree()
-            self.mset = set()
-            self.txset = set()
-
         return all_good
 
 
     def get_authorities(self, xID):
         """ Returns the keys of the authorities for a certain xID """
         return get_authorities(self.directory, xID, self.N)
-
-
-    def sign(self, H):
-        """ Generic signature """
-        k = self.key
-        pub = k.pub.export(EcPt.POINT_CONVERSION_UNCOMPRESSED)
-        sig = k.sign(H)
-        return " ".join(map(b64encode, [pub, sig]))
 
 
 def get_authorities(directory, xID, N = 3):
@@ -517,225 +404,3 @@ def get_authorities(directory, xID, N = 3):
     assert 0 <= len(auths) <= N
     # print N
     return auths
-
-
-class RSCconnection(LineReceiver):
-
-    def __init__(self, f):
-        self.factory = f
-
-    def lineReceived(self, line):
-        self.factory.add_to_buffer(line)
-        self.factory.should_close = True
-        self.transport.loseConnection()
-
-    def connectionLost(self, reason):
-        if not self.factory.should_close:
-            self.factory.d.errback(reason)
-
-
-class RSCfactory(Factory):
-
-    def __init__(self):
-        self.should_close = False
-        self.d = defer.Deferred()
-
-    def add_to_buffer(self, line):
-        if not self.d.called:
-            self.d.callback(line)
-
-    def buildProtocol(self, addr):
-        return RSCconnection(self)
-
-    def clientConnectionLost(self, connector, reason):
-        if not self.should_close:
-            self.d.errback(reason)
-
-    def clientConnectionFailed(self, connector, reason):
-        if not self.should_close:
-            self.d.errback(reason)
-
-
-class Central_Bank:
-
-    def __init__(self, directory, secret):
-        # Connected to Redis for lower level blocks
-        self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
-        self.start_time = time.time()
-        self.mintette_hashes = dict()
-	mintette_ids = []
-	mintette_ids = [(b64encode(kid)) for (kid, ip, port) in directory]
-	for i in mintette_ids:
-            self.mintette_hashes[i] = ''
-        self.dir = [(kid, ip, port) for (kid, ip, port) in directory]
-        self.central_bank_chain = DocChain()
-	self.d_end = defer.Deferred()
-	self.key = rscoin.Key(secret, public=False)
-        self.period_txns = []
-        self.majority = int(len(self.dir) / 2) + 1
-        self.lb_count = 0
-
-
-    def sign(self, H):
-        """ Generic signature """
-        k = self.key
-        pub = k.pub.export(EcPt.POINT_CONVERSION_UNCOMPRESSED)
-        sig = k.sign(H)
-        return " ".join(map(b64encode, [pub, sig]))
-
-
-    def broadcast(self, small_dir, data):
-        d_list = []
-        responses = []
-        # d = defer.Deferred()
-
-        def gotProtocol(p):
-            p.sendLine(data)
-
-        for (kid, ip, port) in small_dir:
-            point = TCP4ClientEndpoint(reactor, ip, int(port), timeout=10)
-            f = RSCfactory()
-
-            d = point.connect(f)
-            d.addCallback(gotProtocol)
-            d.addErrback(f.d.errback)
-
-            d_list += [ f.d ]
-
-        d_all = defer.gatherResults(d_list)
-        return d_all
-
-
-    def get_close_period_responses(resp):
-        try:
-            assert len(resp) <= 3
-            for r in resp:
-                res = unpackage_epoch_response(r)
-                if res[0] != "OK":
-                    print resp
-                    self.d_end.errback(Exception("Period close notification failed."))
-                    return
-
-            print "Period OK"
-            self.d_end.callback()
-        except Exception as e:
-            self.d_end.errback(e)
-            return
-
-
-    def get_open_period_responses(resp):
-        try:
-            assert len(resp) <= 3
-            for r in resp:
-                res = unpackage_epoch_response(r)
-                if res[0] != "OK":
-                    print resp
-                    self.d_end.errback(Exception("Period close notification failed."))
-                    return
-
-            print "Period OK"
-            self.d_end.callback()
-        except Exception as e:
-            self.d_end.errback(e)
-            return
-
-
-    def restart_time(self):
-        self.start_time = time.time()
-
-
-    def validate_lower_block(self, lower_block):
-        all_good = True
-        H_mintette, txset, sig, mset, mintette_id = lower_block
-
-        # Validate the sig of the lower block from the mintette
-        sig_elements = sig.split(" ")
-        key = rscoin.Key(b64decode(sig_elements[0]))
-        all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
-        if not all_good:
-            log.err("Signatue verification failed for lower level block from mintette %s" % mintette_id)
-            return False
-
-        # Validate that the hash of the elements in the lower matches the hash value accompanying them
-        txset_tree = Tree()
-        txset_list = txset.split(" ")
-        for i in txset_list:
-            txset_tree.add(i)
-	if self.central_bank_chain.root() is not None:
-            H = sha256(self.central_bank_chain.root() + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
-	else:
-	    H = sha256(self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
-        H_mset = sha256(mset).hexdigest()
-        if H_mintette != H:
-            log.err("Lower block hash not valid from mintette %s" % mintette_id)
-            all_good = False
-            return False
-
-        if all_good is True:
-            self.period_txns.extend(txset_list)
-            self.mintette_hashes[mintette_id] = H_mintette
-            self.lb_count += 1
-
-        return all_good
-
-
-    def process_lower_blocks(self):
-
-	txset_period_string = ''
-
-        if time.time() - self.start_time > 60:
-            # Period has ended, notify mintettes so they stop sending lower level blocks for this period
-            d = self.broadcast(self.dir, "xClosePeriod")
-            d.addCallback(self.get_close_period_responses)
-            d.addErrback(self.d_end.errback)
-
-            # Now grab any remaining messages off the queue
-            queue_empty = False
-            while queue_empty is not True:
-                lower_block = self.queue.get()
-		if lower_block is not None:
-               	    self.validate_lower_block(lower_block)
-		else:
-		    queue_empty = True
-            t0 = default_timer()
-            txcount = Counter(self.period_txns)
-	    for i in list(txcount):
-		if txcount[i] < self.majority:
-		    del txcount[i]
-            txset_period = set(txcount.elements())
-
-            if len(txset_period) != 0:
-                period_txset_tree = Tree()
-                for i in txset_period:
-                    period_txset_tree.add(i)
-		if self.central_bank_chain.root() is not None:
-                    H = sha256(self.central_bank_chain.root() + period_txset_tree.root()).digest()
-		else:
-		    H = sha256(period_txset_tree.root()).digest()
-                sig = self.sign(H)
-
-	   	if len(txset_period) == 1:
-		    txset_period_string = txset_period
-		if len(txset_period) > 1:
-		    txset_period_string += " ".join([i for i in txset_period])
-
-		higherblock = (H, txset_period_string, sig)
-                self.central_bank_chain.multi_add(higherblock)
-            t1 = default_timer()
-            log.msg("Block Generation Time: %d %f %f %f" % (self.lb_count, (t1 - t0), t0, t1))
-	    if self.central_bank_chain.root() is not None:
-            	p_msg = "xOpenPeriod %s" % b64encode(self.central_bank_chain.root())
-	    else:
-		p_msg = "xOpenPeriod"
-            d = self.broadcast(self.dir, p_msg)
-            d.addCallback(self.get_open_period_responses)
-            d.addErrback(self.d_end.errback)
-
-            self.period_txns = []
-            self.lb_count = 0
-            self.restart_time()
-
-        lower_block = self.queue.get()
-
-        if lower_block is not None:
-            self.validate_lower_block(lower_block)
