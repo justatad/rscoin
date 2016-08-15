@@ -651,9 +651,9 @@ class Central_Bank:
         # Validate the sig of the lower block from the mintette
         sig_elements = sig.split(" ")
         key = rscoin.Key(b64decode(sig_elements[0]))
-        t0 = default_timer
+        t0 = default_timer()
         all_good &= key.verify(H_mintette, b64decode(sig_elements[1]))
-        t1 = default_timer
+        t1 = default_timer()
         log.msg("Verify: %f %f %f" % ((t1 - t0), t0, t1))
         if not all_good:
             log.err("Signatue verification failed for lower level block from mintette %s" % mintette_id)
@@ -664,12 +664,12 @@ class Central_Bank:
         txset_list = txset.split(" ")
         for i in txset_list:
             txset_tree.add(i)
-        t0 = default_timer
+        t0 = default_timer()
 	if self.central_bank_chain.root() is not None:
             H = sha256(self.central_bank_chain.root() + self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
 	else:
 	    H = sha256(self.mintette_hashes[mintette_id] + mset + txset_tree.root()).digest()
-        t1 = default_timer
+        t1 = default_timer()
         log.msg("Hash: %f %f %f" % ((t1 - t0), t0, t1))
         if H_mintette != H:
             log.err("Lower block hash not valid from mintette %s" % mintette_id)
@@ -713,12 +713,12 @@ class Central_Bank:
                 period_txset_tree = Tree()
                 for i in txset_period:
                     period_txset_tree.add(i)
-                t2 = default_timer
+                t2 = default_timer()
 		if self.central_bank_chain.root() is not None:
                     H = sha256(self.central_bank_chain.root() + period_txset_tree.root()).digest()
 		else:
 		    H = sha256(period_txset_tree.root()).digest()
-                t3 = default_timer
+                t3 = default_timer()
                 log.msg("Hash: %f %f %f" % ((t3 - t2), t2, t3))
                 t2 = default_timer
                 sig = self.sign(H)
