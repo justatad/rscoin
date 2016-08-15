@@ -720,9 +720,9 @@ class Central_Bank:
 		    H = sha256(period_txset_tree.root()).digest()
                 t3 = default_timer()
                 log.msg("Hash: %f %f %f" % ((t3 - t2), t2, t3))
-                t2 = default_timer
+                t2 = default_timer()
                 sig = self.sign(H)
-                t3 = default_timer
+                t3 = default_timer()
                 log.msg("Sign: %f %f %f" % ((t3 - t2), t2, t3))
 	   	if len(txset_period) == 1:
 		    txset_period_string = txset_period
