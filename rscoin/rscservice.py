@@ -572,7 +572,7 @@ class Central_Bank:
 	self.d_end = defer.Deferred()
 	self.key = rscoin.Key(secret, public=False)
         self.period_txns = []
-        self.majority = int(len(self.dir) / 2) + 1
+        self.majority = 2
         self.lb_count = 0
 
 
