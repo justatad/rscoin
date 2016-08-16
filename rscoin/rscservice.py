@@ -450,7 +450,7 @@ class RSCFactory(protocol.Factory):
         ser_mainTx = mainTx.serialize()
         if len(otherTx) >= 1:
             self.mset |= set(otherTx)
-        self.txset.add(ser_mainTx)
+        self.txset.add(b64encode(ser_mainTx))
 
         # Check to see if enough transactions have been received and close the epoch if they have
         if self.txCount >= 1000 and self.periodStatus == 'Open':
