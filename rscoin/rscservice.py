@@ -702,7 +702,6 @@ class Central_Bank:
                	    self.validate_lower_block(lower_block)
 		else:
 		    queue_empty = True
-            t0 = default_timer()
             txcount = Counter(self.period_txns)
 	    for i in list(txcount):
 		if txcount[i] < self.majority:
@@ -710,6 +709,7 @@ class Central_Bank:
             txset_period = set(txcount.elements())
 
             if len(txset_period) != 0:
+                t0 = default_timer()
                 period_txset_tree = Tree()
                 for i in txset_period:
                     period_txset_tree.add(i)
