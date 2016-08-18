@@ -559,7 +559,7 @@ class RSCfactory(Factory):
 
 class Central_Bank:
 
-    def __init__(self, directory, secret):
+    def __init__(self, directory, secret, period):
         # Connected to Redis for lower level blocks
         self.queue = HotQueue("rscoin", host="rscoinredis.p1h0i7.0001.euw1.cache.amazonaws.com", port=6379, db=0)
         self.start_time = time.time()
@@ -575,6 +575,7 @@ class Central_Bank:
         self.period_txns = []
         self.majority = 2
         self.lb_count = 0
+        self.period = period
 
 
     def sign(self, H):
@@ -689,7 +690,7 @@ class Central_Bank:
 
 	txset_period_string = ''
 
-        if time.time() - self.start_time > 60:
+        if time.time() - self.start_time > period:
             # Period has ended, notify mintettes so they stop sending lower level blocks for this period
             d = self.broadcast(self.dir, "xClosePeriod")
             d.addCallback(self.get_close_period_responses)

@@ -8,7 +8,8 @@ from base64 import b64encode, b64decode
 dir_data = file("directory.conf").read()
 directory = load_setup(dir_data)
 secret = file("secret.key").read()
-this_bank = Central_Bank(directory["directory"], secret)
+period = file("period").read()
+this_bank = Central_Bank(directory["directory"], secret, period)
 
 application = service.Application("rscoin")
 ts = TimerService(0.1, this_bank.process_lower_blocks)
